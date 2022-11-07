@@ -1,0 +1,106 @@
+
+<html xmlns:th="http://www.thymleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="/js/santaUtils.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/css/css.css">
+</head>
+
+<body>
+<div class="header">
+    <a class="header-item"></a>
+    <a class="header-item"></a>
+    <a class="header-item look"></a>
+</div>
+<div class="login">
+    <div class="logo-wrapper">
+        <img src="/img/logo.svg">
+        <div class="shadow"></div>
+    </div>
+    <p class="page-title">
+        지금 산타와 함께 <br/>
+        등산을 시작해보세요!
+    </p>
+    <p class="page-des">
+        <strong>등산 정보 추천</strong>부터 <strong>산타러</strong>들과의 소통까지!
+    </p>
+    <div class="buttons">
+<!--        <button class="login-button google" value="guest">
+            <span><strong>APP TEST LOGIN</strong></span>
+            <span class="empty"></span>
+        </button>-->
+        <button class="login-button kakao" value="kakao">
+            <img src="/img/kakao.png">
+            <span><strong>카카오</strong>로 시작하기</span>
+            <span class="empty"></span>
+        </button>
+        <button class="login-button naver" value="naver">
+            <img src="/img/naver.svg">
+            <span><strong>네이버</strong>로 시작하기</span>
+            <span class="empty"></span>
+        </button>
+        <button class="login-button google" value="imsi">
+            <img src="/img/main_icon2.svg">
+            <span style="padding-right: 20px"><strong>인증번호</strong>로 시작하기</span>
+            <span class="empty"></span>
+        </button>
+        <button class="login-button google" value="guest">
+            <img src="/img/main_icon3.svg">
+            <span style="padding-right: 20px"><strong>산타 체험하기</strong></span>
+            <span class="empty"></span>
+        </button>
+<!--        <button class="login-button google imsi" value="google">
+            <img src="/img/google.svg">
+            <span><strong>구글</strong>로 시작하기</span>
+            <span class="empty"></span>
+        </button>-->
+    </div>
+    <!-- 구글 UGC 정책 관련 삭제 2022-11-07
+    <p class="login-des">
+        로그인시 산타의 서비스 약관,<br/>개인정보 취급 방침에 동의하게 됩니다.
+    </p>
+    -->
+</div>
+</body>
+<script th:inline="javascript">
+    $(document).ready(function(){
+
+        console.log('%c 비로그인 상태 ', 'background: #2BFC5F; color: #FFFFFF; font-weight:bold');
+        // 등산기록이 남아있을경우 삭제
+        if (climbFlag) climbResult();
+        window.localStorage.clear();
+        Print.postMessage("dismiss");
+
+    });
+
+    $(".login-button").on('click',function(){
+        if($(this).val() == "imsi") {
+            let inputString = prompt('인증번호를 입력하세요', '인증번호');
+            if(inputString == "asdqwe") {
+                location.replace("https://santa-community.co.kr/auth/imsi/callback");
+            }else {
+                Print.postMessage("정확한 인증번호를 입력해주세요");
+                return false;
+            }
+        }
+        location.replace("https://santa-community.co.kr/login/" + $(this).val());
+    });
+
+    console.log("      ___           ___           ___                         ___\n" +
+        "     /\\__\\         /\\  \\         /\\  \\                       /\\  \\\n" +
+        "    /:/ _/_       /::\\  \\        \\:\\  \\         ___         /::\\  \\\n" +
+        "   /:/ /\\  \\     /:/\\:\\  \\        \\:\\  \\       /\\__\\       /:/\\:\\  \\\n" +
+        "  /:/ /::\\  \\   /:/ /::\\  \\   _____\\:\\  \\     /:/  /      /:/ /::\\  \\\n" +
+        " /:/_/:/\\:\\__\\ /:/_/:/\\:\\__\\ /::::::::\\__\\   /:/__/      /:/_/:/\\:\\__\\\n" +
+        " \\:\\/:/ /:/  / \\:\\/:/  \\/__/ \\:\\~~\\~~\\/__/  /::\\  \\      \\:\\/:/  \\/__/\n" +
+        "  \\::/ /:/  /   \\::/__/       \\:\\  \\       /:/\\:\\  \\      \\::/__/\n" +
+        "   \\/_/:/  /     \\:\\  \\        \\:\\  \\      \\/__\\:\\  \\      \\:\\  \\\n" +
+        "     /:/  /       \\:\\__\\        \\:\\__\\          \\:\\__\\      \\:\\__\\\n" +
+        "     \\/__/         \\/__/         \\/__/           \\/__/       \\/__/\n" +
+        "                                                                             " +
+        "                                  S A N T A                                  ");
+</script>
+
+</html>

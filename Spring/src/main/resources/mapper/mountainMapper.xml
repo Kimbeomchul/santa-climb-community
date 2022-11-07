@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mozzi.santa.mapper.MountainMapper">
+
+
+
+<!--
+    <insert id="saveMt">
+        INSERT INTO mountain(mntiadminnum, mntihigh,mntiadmin ,mntilistno ,mntiname ,mntiadd) VALUES(#{mntiadminnum} , #{mntihigh} , #{mntiadmin} , #{mntilistno} , #{mntiname} , #{mntiadd})
+    </insert>
+-->
+
+   <update id="saveMt">
+        UPDATE mountain SET mntimages = #{image} WHERE mntilistno = #{mntilistno};
+    </update>
+
+    <select id="selectMountainDetail" resultType="com.mozzi.santa.dto.Mountain">
+        /* 산 상세검색 */
+        SELECT
+             a.mntcode
+             ,a.mntidetails
+             ,a.mntiadminnum
+             ,a.mntihigh
+             ,a.mntiadmin
+             ,a.mntilistno
+             ,a.mntiadd
+             ,a.mntiname
+             ,a.mntimages
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+             ,(SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) as likesYsno
+        FROM mountain a
+        WHERE mntcode = #{mtNum}
+        ORDER BY mntcode ASC
+
+    </select>
+
+    <select id="selectMapMountainList" resultType="com.mozzi.santa.dto.Mountain">
+        /* 산 위치 */
+        SELECT
+            a.mntcode
+             , a.mntidetails
+             , a.mntiadminnum
+             , a.mntihigh
+             , a.mntiadmin
+             , a.mntilistno
+             , a.mntiadd
+             , a.mntiname
+             , a.mntimages
+             , a.mntilat
+             , a.mntilon
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+             ,(SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) as likesYsno
+        FROM mountain a
+        WHERE mntilat is not NULL
+        ORDER BY mntcode ASC
+
+    </select>
+
+    <select id="selectBannerMountain" resultType="com.mozzi.santa.dto.Mountain">
+        /* 배너 산 검색 */
+        SELECT
+            a.mntcode
+             ,a.mntihigh
+             ,a.mntiname
+             ,a.mntimages
+             ,a.tag1
+             ,a.tag2
+             ,a.tag3
+             ,a.tag4
+        FROM mountain a
+        WHERE mntibanner = 'Y'
+    </select>
+
+    <select id="selectMountainList" resultType="com.mozzi.santa.dto.Mountain">
+        /* 산 검색 with paging */
+        SELECT
+             a.mntcode
+             ,a.mntilistno
+             ,a.mntiadd
+             ,a.mntiname
+             ,a.mntimages
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+             ,(SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) as likesYsno
+        FROM mountain a
+        GROUP BY mntilistno
+        ORDER BY mntcode ASC
+        LIMIT #{start} , #{end}
+
+    </select>
+
+    <select id="selectFavoriteMt" resultType="com.mozzi.santa.dto.Mountain">
+        /* 즐겨찾는 산 검색 */
+        SELECT
+            a.mntcode
+             ,a.mntilistno
+             ,a.mntiadd
+             ,a.mntiname
+             ,a.mntimages
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+             ,(SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) as likesYsno
+        FROM mountain a
+        WHERE (SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) = '1'
+        GROUP BY mntilistno
+        ORDER BY mntilistno ASC
+    </select>
+
+    <select id="selectSearchedMountainList" resultType="com.mozzi.santa.dto.Mountain">
+        /* 산 검색 */
+        SELECT
+            mntcode
+             ,mntilistno
+             ,mntiadd
+             ,mntiname
+             ,mntimages
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+             ,(SELECT COUNT(*) FROM mountain_likes b WHERE b.socialId = #{socialId} AND b.mntcode = a.mntcode) as likesYsno
+        FROM mountain a
+        WHERE mntiname LIKE CONCAT('%',#{searchWord},'%')
+        GROUP BY mntilistno
+        ORDER BY mntilistno ASC
+
+    </select>
+
+    <select id="selectSearchedMountainListLatLon" resultType="com.mozzi.santa.dto.Mountain">
+        /* 산 검색 */
+        SELECT
+            mntcode
+             ,mntiadd
+             ,mntihigh
+             ,mntiname
+             ,mntimages
+             ,mntilat
+             ,mntilon
+             ,(SELECT COUNT(*) FROM mountain_likes c WHERE c.mntcode = a.mntcode) as mntlikes
+        FROM mountain a
+        WHERE mntiname LIKE CONCAT('%',#{searchWord},'%')
+          AND a.mntilat IS NOT NULL
+          AND a.mntilon IS NOT NULL
+    </select>
+
+    <select id="findMtLikes" resultType="Long">
+        /* 산 좋아요여부 조회 */
+        SELECT
+            COUNT(mountainLikes)
+        FROM  mountain_likes
+        WHERE mntcode = #{mntcode}
+          AND   socialId = #{socialId}
+    </select>
+
+
+    <select id="selectClimbResult" resultType="com.mozzi.santa.dto.Climb">
+        /* 등산결과 정보 조회 */
+        SELECT
+            *
+        FROM  mountain_climb
+        WHERE socialId = #{socialId}
+    </select>
+
+    <select id="selectClimbDetailResult" resultType="com.mozzi.santa.dto.Climb">
+        /* 등산결과 정보 조회 */
+        SELECT
+            *
+        FROM  mountain_climb
+        WHERE socialId = #{socialId}
+        AND climbNum = #{climbNum}
+    </select>
+
+    <insert id="insertMtLikes">
+        /* 산  좋아요 추가 */
+        INSERT
+        INTO mountain_likes(mntcode , socialId)
+        VALUES (#{mntcode},#{socialId})
+    </insert>
+
+    <insert id="insertClimbResult">
+        /* 산 등산기록 추가 */
+        INSERT
+        INTO mountain_climb(socialId, climbTime, climbName, climbDistance, climbLocation , climbFinTime)
+        VALUES (#{socialId}, #{time}, #{name}, #{distance} , #{location} , #{fintime})
+    </insert>
+
+
+    <insert id="insertMountainRequest">
+        /* 산 추가요청 */
+        INSERT
+        INTO request_mountain( socialId, requestType, mntiname , mntidetails , mntimages ,mntihigh)
+        VALUES (#{socialId},#{mountain.requestType},#{mountain.mntiname},#{mountain.mntidetails},#{mountain.mntimages},#{mountain.mntihigh})
+    </insert>
+
+
+    <delete id="deleteMtLikes">
+        /* 산  좋아요 삭제 */
+        DELETE
+        FROM mountain_likes
+        WHERE mntcode = #{mntcode}
+          AND   socialId = #{socialId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mozzi.santa.mapper.MemberMapper">
+
+    <select id="selectUsername" resultType="Long">
+        /* 회원 닉네임 중복조회*/
+        SELECT
+             COUNT(nickname)
+        FROM member
+        WHERE nickname = #{username}
+    </select>
+
+    <select id="selectGuestCnt" resultType="Long">
+        /* 게스트 수 조회*/
+        SELECT
+            COUNT(*)
+        FROM member
+        WHERE socialType = 'guest'
+    </select>
+
+    <select id="selectFollowMembers" resultType="com.mozzi.santa.dto.Member">
+        /* 팔로워 조회*/
+        SELECT
+            a.follower
+             ,a.following
+             ,(SELECT nickname FROM member WHERE socialId = a.following) as nickname
+             ,(SELECT memberImage FROM member WHERE socialId = a.following) as memberImage
+        FROM follow a
+        WHERE follower = #{socialId}
+    </select>
+
+    <select id="selectFollowingMembers" resultType="com.mozzi.santa.dto.Member">
+        /* 팔로잉 조회*/
+        SELECT
+            a.follower
+             ,a.following
+             ,(SELECT nickname FROM member WHERE socialId = a.follower) as nickname
+             ,(SELECT memberImage FROM member WHERE socialId = a.follower) as memberImage
+        FROM follow a
+        WHERE following = #{socialId}
+    </select>
+
+    <select id="selectMemberInfo" resultType="com.mozzi.santa.dto.Member">
+        /* 회원 조회 */
+        SELECT
+            mmbrNum
+             ,socialId
+             ,email
+             ,memberImage
+             ,phone
+             ,agreeYsno
+             ,nickname
+             ,createdDate
+             ,grade
+             ,socialType
+             ,(SELECT COUNT(*) FROM board a WHERE a.writer = #{socialId}) as boardCnt
+             ,(SELECT COUNT(*) FROM follow b WHERE b.follower = #{socialId}) as followCnt
+        FROM member
+        WHERE socialId = #{socialId}
+    </select>
+
+
+    <select id="selectMemberId" resultType="Long">
+        /* 회원번호 조회 */
+        SELECT
+             mmbrNum
+        FROM member
+        WHERE socialId = #{socialId}
+    </select>
+
+    <select id="followMember" resultType="Long">
+        /* 팔로우 조회 */
+        SELECT
+            COUNT(followNum)
+        FROM follow
+        WHERE following = #{socialId} AND follower = #{mySocialId}
+    </select>
+
+    <select id="selectBugReport" resultType="com.mozzi.santa.dto.BugReport">
+        /* 버그리포트 */
+        SELECT
+            *
+        FROM bug_report
+        WHERE socialId = #{socialId}
+    </select>
+
+    <insert id="insertBugReport">
+        /* 버그리포트 */
+        INSERT
+        INTO bug_report(socialId ,errorPage, errorDetail )
+        VALUES (#{socialId},#{page}, #{detail})
+    </insert>
+
+    <insert id="follow">
+        /* 팔로우 추가 */
+        INSERT
+        INTO follow(follower , following )
+        VALUES (#{mySocialId},#{socialId})
+    </insert>
+
+    <delete id="unfollow">
+        /* 팔로우 삭제 */
+        DELETE
+        FROM follow
+        WHERE follower = #{mySocialId} AND following = #{socialId}
+    </delete>
+
+    <insert id="signupMember">
+        /* 회원가입 */
+        INSERT
+          INTO member(socialId, email, phone, memberImage, socialType, nickname,grade)
+        VALUES (#{socialId},#{email},#{phone},#{memberImage},#{socialType},#{nickname}, '등린이')
+    </insert>
+
+    <update id="updateMemberInfo">
+        UPDATE
+            member
+           SET
+            nickname = #{nickname},
+            email = #{email},
+            phone = #{phone},
+            memberImage = #{memberImage}
+         WHERE
+            socialId = #{socialId}
+    </update>
+
+
+    <!-- 회원 탈퇴 -->
+    <delete id="quitFollow">
+        /* 팔로우 삭제 */
+        DELETE
+        FROM follow
+        WHERE follower = #{socialId} OR following = #{socialId}
+    </delete>
+
+    <delete id="quitMember">
+        /* 회원 삭제 */
+        DELETE
+        FROM member
+        WHERE socialId = #{socialId}
+    </delete>
+
+    <delete id="quitMtLikes">
+        /* 산 좋아요 삭제 */
+        DELETE
+        FROM mountain_likes
+        WHERE socialId = #{socialId}
+    </delete>
+
+    <delete id="quitBoardLikes">
+        /* 게시판 좋아요 삭제 */
+        DELETE
+        FROM board_likes
+        WHERE socialId = #{socialId}
+    </delete>
+
+    <delete id="quitBoardComments">
+        /* 게시판 댓글 삭제 */
+        DELETE
+        FROM board_comments
+        WHERE socialId = #{socialId}
+    </delete>
+
+    <delete id="quitBoard">
+        /* 게시판 삭제 */
+        DELETE
+        FROM board
+        WHERE writer = #{socialId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,76 @@
+<html xmlns:th="http://www.thymleaf.org">
+<style>
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.4/lottie.min.js"></script>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<div th:replace="~{fragment/header :: signHead}"></div>
+
+<body>
+<!-- 로딩바 -->
+<div class="wrapper" style="display: none;">
+    <div id="myGIF"></div>
+</div>
+<!-- 로딩바 -->
+
+<div class="complete">
+    <div class="mountain"></div>
+    <p class="page-title">축하합니다!<br/>드디어 <strong>산타러</strong>가 되셨어요!😎</p>
+    <p class="page-des">산타에서 등산코스 추천도 받고,<br/>다른 산타러 친구들과 소통해보세요!</p>
+    <div class="box left">
+        <div class="background">
+            <p class="banner-subtitle">안녕하세요, 산타러타러님!</p>
+            <p class="banner-title">이번 주는 <strong>관악산</strong> 어떠세요?</p>
+            <div class="banner-tag">
+                <span>#버섯불고기</span>
+                <span>#다람쥐</span>
+                <span>#향교집</span>
+                <span>#도토리묵</span>
+            </div>
+        </div>
+    </div>
+    <div class="box right">
+        <div class="user">
+            <img src="/img/user1.png">
+            <div>
+                <p class="user-name">산타러타러</p>
+                <p class="user-text">오늘 관악산 갔다왔는데 정상에서 먹은 라면 진짜
+                    꿀맛이었어요 ㅠㅠ 산에 가시면 꼭 컵라면 드셔보세요!!</p>
+                <div class="reply">
+                    <span>10분 전</span>
+                    <span>답글달기</span>
+                </div>
+            </div>
+        </div>
+        <div class="user">
+            <img src="/img/user2.png">
+            <div>
+                <p class="user-name">바다조아</p>
+                <p class="user-text">뜨거운 물은 어떻게 가져가셨어요? </p>
+                <div class="reply">
+                    <span>10분 전</span>
+                    <span>답글달기</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="button-wrapper">
+        <button class="button" id="nextserve">산타 시작하기</button>
+    </div>
+</div>
+
+</body>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        santaLikeAnimationStart("/json/celebrate.json", 1);
+    });
+
+    $("#nextserve").on("click",function(){
+        window.location.replace("https://santa-community.co.kr/main");
+    });
+</script>
+</html>

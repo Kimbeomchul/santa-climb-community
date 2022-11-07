@@ -1,0 +1,137 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/font.css" type="text/css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment-with-locales.min.js"></script>
+</head>
+<body>
+    <div class="wrap">
+        <section class="main community">
+            <!-- header -->
+            <div th:replace="~{fragment/header :: header (|${search} 검색결과|)}"></div>
+
+            <div class="community_box">
+                <!-- CONTENTS -->
+                <div class="c_bottom" id="bottom_content">
+                    <div style="padding-top:20px; border-top: 0px"></div>
+                    <div class="content_box" th:each="board : ${board}" th:value="${board.boardNum}" style="border-bottom: 1px solid #D5D5D5">
+                        <div class="c_bottom_top" th:onclick="|location.href='https://santa-community.co.kr/board/detail/' + ${board.boardNum}|">
+                            <div class="c_b_left">
+                                <h3 th:text="${board.title}">제목</h3>
+                                <p class="board_content" th:utext="${board.content}">내용</p>
+                            </div>
+                            <img th:if="${board.boardImage == ''}" th:src="@{/img/defaultImage.svg}" alt="" height="58" width="85">
+                            <img th:unless="${board.boardImage == ''}" th:src="@{${board.boardImage}}" alt="" height="58" width="85">
+                        </div>
+                        <div class="c_bottom_bottom">
+                            <p>
+                                <span class="search_writer" th:text="${board.writer}">사용자</span>
+                                <span></span>
+                                <span class="createdTime" th:value="${board.createDate}"></span>
+                            </p>
+                            <ul>
+                                <li class="likesBtn" th:value="${board.boardNum}">
+                                    <img th:classappend="|like_img${board.boardNum}|" th:if="${board.likesYsno} == 0" src="/img/like_icon_off.svg">
+                                    <img th:classappend="|like_img${board.boardNum}|" th:unless="${board.likesYsno} == 0" src="/img/like_icon_active.svg">
+                                    <p th:classappend="|likes${board.boardNum}|" th:text="${board.boardLikes}">1,000</p>
+                                </li>
+                                <li><img src="/img/chatting_icon.svg"><p th:text="${board.boardComments}">12</p></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <div th:if="${guest == 'N'}"  class="plus_btn" th:onclick="location.href='https://santa-community.co.kr/board/write'">
+            <p style="font-weight: bold">+</p>
+        </div>
+
+        <div th:replace="~{fragment/footer :: bottom_navigation_bar ('board')}"></div>
+
+    </div>
+    <script th:inline="javascript">
+        $(function(){
+            let cho = /[ㄱ-ㅎ|ㅏ-ㅣ]/g
+            let findSearchYsno = "[(${search})]";
+            let lengthClass= $(".createdTime").length;
+            let boardContentLength = $(".board_content").length;
+
+            // 컨텐츠 길이제한
+            for(let x=0; x<boardContentLength; x++){
+                let limitContent =$(".board_content")[x];
+                if(limitContent.innerText.length >= 30){
+                    limitContent.innerHTML = limitContent.innerText.substring(0, 28) +"..."
+                }
+            }
+            for (let i =0; i<lengthClass; i++ ){
+                let createdDate = $(".createdTime:eq("+i+")").attr("value");
+                $(".createdTime:eq("+i+")").text(moment(createdDate, "YYYY-MM-DD HH:mm:ss").locale('ko').fromNow());
+
+            }
+
+            if(findSearchYsno == "fromProfile"){
+                let writer = "[(${writer})]";
+                $(".header_text").text(writer + "님의 게시글");
+            }
+
+            // 검색기능
+            $(".search_icon > svg").click(function(){
+                $(".search_icon > input").toggleClass('active');
+                if($(".search_icon > input").hasClass('active') == false && $(".search_icon > input").val() != ''){
+                    let val_input = $(".search_icon > input").val().trim();
+                    if(cho.test(val_input)){
+                        $(".search_icon > input").val("");
+                        Print.postMessage('초성 검색은 불가능합니다');
+                        return false;
+                    }
+                    if(val_input == '') return false;
+                    location.href= "https://santa-community.co.kr/board/search/"+val_input;
+                }
+            });
+
+            $("#searchInput").on("keydown",function (e){
+                if(e.key === "Enter"){
+                    $(".search_icon > svg").click();
+                }
+            });
+
+    
+            $(".c_bottom_bottom > ul").find('li:eq(0)').click(function(){
+                let $this = $(this);
+                $this.find('>img').attr("src", function(index, attr){
+                    if(attr.match('off')){
+                        return attr.replace("_off.png", "_active.png");
+                    }else {
+                        return attr.replace("_active.png", "_off.png");
+                    }
+                });
+            });
+
+            $(document).on("click",".likesBtn",function(){
+                let boardNumLikes = $(this).val();
+                let thisBoardId = $(".likes" + boardNumLikes).text();
+                $.ajax({
+                     type: "POST",
+                     url: "https://santa-community.co.kr/board/like/" + boardNumLikes,
+                     success : function(result){
+                         (result == 2) ? $(".likes"+ boardNumLikes).text(parseInt(thisBoardId) + 1) : $(".likes"+ boardNumLikes).text(parseInt(thisBoardId) - 1);
+                     },
+                     error : function(err){
+                         console.log("좋아요 에러 = {}", err);
+                     }
+                 });
+            });
+        });
+
+
+    </script>
+
+</body>
+</html>

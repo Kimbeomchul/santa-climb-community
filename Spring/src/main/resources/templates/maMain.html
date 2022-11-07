@@ -1,0 +1,338 @@
+<!doctype html>
+
+<html xmlns:th="http://www.thymleaf.org">
+<script type="text/javascript" src="/js/santaUtil.min.js"></script>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<div th:replace="~{fragment/header :: linkHead}"></div>
+<body>
+    <div class="wrap">
+
+        <section class="main home">
+            <!-- Alert -->
+            <div class="start_modal" id="chat_alert" style="display: none;">
+                <div class="modal_box">
+                    <h3>1:1 대화를 시작하시겠습니까?</h3>
+                    <p></p>
+                    <div class="modal_bottom">
+                        <p class="hide_alert">아니요</p>
+                        <p class="start_chat">대화하기</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Alert -->
+            <!-- Alert -->
+            <div class="start_modal" id="guest_alert" style="display: none;">
+                <div class="modal_box">
+                    <h3>현재 게스트 로그인중입니다</h3>
+                    <p>로그인 후 이용 가능합니다</p>
+                    <div class="modal_bottom">
+                        <p class="hide_guest_alert">취소</p>
+                        <p class="goto_login">회원가입</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Alert -->
+            <div id="logo_view" class="logo_view">
+                <img src="img/main_logo.svg" alt="">
+                <div class="more_view">
+                    <p><span id="recommend_mt" th:text="${banner.mntiname}">관악산</span> 알아보기</p>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="7" cy="7" r="7" fill="white"/>
+                        <g clip-path="url(#clip0_2_925)">
+                        <path d="M5.66661 11.3333C5.62275 11.3336 5.57926 11.3252 5.53865 11.3086C5.49803 11.292 5.46109 11.2676 5.42995 11.2367C5.39871 11.2057 5.37391 11.1688 5.35698 11.1282C5.34006 11.0876 5.33135 11.044 5.33135 11C5.33135 10.956 5.34006 10.9124 5.35698 10.8718C5.37391 10.8312 5.39871 10.7943 5.42995 10.7633L8.15328 8.03999C8.34055 7.85249 8.44573 7.59833 8.44573 7.33333C8.44573 7.06833 8.34055 6.81416 8.15328 6.62666L5.42995 3.90333C5.36718 3.84057 5.33192 3.75543 5.33192 3.66667C5.33192 3.5779 5.36718 3.49277 5.42995 3.43C5.49272 3.36723 5.57785 3.33197 5.66661 3.33197C5.75538 3.33197 5.84051 3.36723 5.90328 3.43L8.62661 6.15333C8.78183 6.30815 8.90497 6.49207 8.98899 6.69455C9.07301 6.89703 9.11626 7.1141 9.11626 7.33333C9.11626 7.55255 9.07301 7.76962 8.98899 7.97211C8.90497 8.17459 8.78183 8.35851 8.62661 8.51333L5.90328 11.2367C5.87213 11.2676 5.8352 11.292 5.79458 11.3086C5.75397 11.3252 5.71048 11.3336 5.66661 11.3333Z" fill="#17C99E"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_2_925">
+                        <rect width="8" height="8" fill="white" transform="translate(3.33334 3.33334)"/>
+                        </clipPath>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="main_txt">
+                    <p>안녕하세요, <span th:text="${member.nickname}"></span>님!</p>
+                    <h3>이번 주는 <span th:text="${banner.mntiname}"></span> 어떠세요?</h3>
+                    <div  id="tags">
+
+                    </div>
+                </div>
+            </div>
+            <div class="main_box">
+                <div class="box_txt">
+                    <p>이번주는 어디로 떠나볼까요?</p>
+                </div>
+                <div class="icon_box">
+                    <div>
+                        <img id="flag_climb" src="img/main_icon1.svg" style="padding-top: 1.1px">
+                        <p>등산시작</p>
+                    </div>
+                    <div th:onclick="location.href='https://santa-community.co.kr/mt/list'" style="padding-top: 1.1px">
+                        <img src="img/main_icon2.svg">
+                        <p style="padding-top: 3px;padding-bottom: 0px;">산 검색</p>
+                    </div>
+                    <div th:onclick="location.href='https://santa-community.co.kr/mt/favorite'" style="padding-top: 1.1px">
+                        <img src="img/main_icon3.svg" style="height:56px;">
+                        <p>즐겨찾는 산</p>
+                    </div>
+                </div>
+            </div>
+            <div class="main_box friend">
+                <div class="box_txt">
+                    <p>현재 접속중인 산타러</p> <!-- TODO : 밑의 svg 주석해제 후 선택시 내위치 반경 몇 km의 현재접속중 사람들 표시 -->
+                    <!--<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.75834 5.59167C7.43334 5.91667 7.43334 6.44167 7.75834 6.76667L10.9917 10L7.75834 13.2333C7.43334 13.5583 7.43334 14.0833 7.75834 14.4083C8.08334 14.7333 8.60834 14.7333 8.93334 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73334 12.7583 9.40833L8.93334 5.58333C8.61667 5.26667 8.08334 5.26667 7.75834 5.59167Z" fill="#17C99E"/>
+                    </svg>-->
+                </div>
+                <div class="find_friend">
+                    <div class="friend_box">
+                        <div>
+                            <div>
+                                <img style="width: 100%" th:src="${member.memberImage}" src="img/circle_img.png" alt="">
+                                <!--<div>
+                                    <svg width="7" height="7" viewBox="0 0 7 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g clip-path="url(#clip0_2_988)">
+                                        <path d="M3.14736 1.90758C2.94764 1.90758 2.7524 1.9668 2.58634 2.07776C2.42027 2.18872 2.29084 2.34644 2.21441 2.53096C2.13798 2.71548 2.11798 2.91852 2.15695 3.11441C2.19591 3.31029 2.29209 3.49022 2.43331 3.63145C2.57454 3.77268 2.75447 3.86885 2.95036 3.90782C3.14624 3.94678 3.34929 3.92678 3.53381 3.85035C3.71833 3.77392 3.87604 3.64449 3.987 3.47843C4.09796 3.31236 4.15719 3.11712 4.15719 2.9174C4.15719 2.64958 4.05079 2.39273 3.86142 2.20335C3.67204 2.01397 3.41519 1.90758 3.14736 1.90758ZM3.14736 3.42231C3.0475 3.42231 2.94988 3.3927 2.86685 3.33722C2.78382 3.28174 2.7191 3.20288 2.68089 3.11062C2.64267 3.01836 2.63267 2.91684 2.65216 2.8189C2.67164 2.72095 2.71973 2.63099 2.79034 2.56037C2.86095 2.48976 2.95092 2.44167 3.04886 2.42219C3.1468 2.40271 3.24833 2.41271 3.34059 2.45092C3.43285 2.48914 3.5117 2.55385 3.56718 2.63689C3.62266 2.71992 3.65228 2.81754 3.65228 2.9174C3.65228 3.05131 3.59908 3.17974 3.50439 3.27442C3.4097 3.36911 3.28128 3.42231 3.14736 3.42231Z" fill="#E6E6E6"/>
+                                        <path d="M3.14729 6.45186C2.93471 6.45295 2.72496 6.40309 2.53561 6.30646C2.34626 6.20983 2.18281 6.06924 2.05896 5.89646C1.09685 4.5693 0.608856 3.5716 0.608856 2.93086C0.608856 2.25763 0.876298 1.61197 1.35235 1.13592C1.8284 0.659867 2.47406 0.392426 3.14729 0.392426C3.82053 0.392426 4.46619 0.659867 4.94224 1.13592C5.41829 1.61197 5.68573 2.25763 5.68573 2.93086C5.68573 3.5716 5.19774 4.5693 4.23563 5.89646C4.11178 6.06924 3.94833 6.20983 3.75898 6.30646C3.56962 6.40309 3.35988 6.45295 3.14729 6.45186ZM3.14729 0.943536C2.62027 0.944137 2.11501 1.15376 1.74235 1.52642C1.36969 1.89908 1.16006 2.40435 1.15946 2.93137C1.15946 3.43881 1.63736 4.37718 2.5048 5.57357C2.57844 5.675 2.67504 5.75755 2.78672 5.81448C2.89839 5.8714 3.02195 5.90108 3.14729 5.90108C3.27264 5.90108 3.3962 5.8714 3.50787 5.81448C3.61955 5.75755 3.71615 5.675 3.78979 5.57357C4.65723 4.37718 5.13513 3.43881 5.13513 2.93137C5.13453 2.40435 4.9249 1.89908 4.55224 1.52642C4.17958 1.15376 3.67432 0.944137 3.14729 0.943536Z" fill="#E6E6E6"/>
+                                        </g>
+                                        <defs>
+                                        <clipPath id="clip0_2_988">
+                                        <rect width="6.05893" height="6.05893" fill="white" transform="translate(0.117859 0.392853)"/>
+                                        </clipPath>
+                                        </defs>
+                                    </svg>
+                                    <p>관악산</p>
+                                </div>-->
+                            </div>
+                        </div>
+                        <p th:text="${member.nickname}">닉네임</p>
+                    </div>
+
+                    <div class="friend_box login_user_box" th:each="loginUsers : ${loginMembers}" th:value="${loginUsers.socialId}">
+                        <div>
+                            <div>
+                                <img style="width: 100%" th:src="${loginUsers.memberImage}" src="img/circle_img.png" alt="">
+                            </div>
+                        </div>
+                        <p th:text="${loginUsers.nickname}">닉네임</p>
+                    </div>
+                </div>
+            </div>
+            <div class="main_box" id="climb_status">
+                <div class="box_txt">
+                    <p>나의 등산정보</p>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.75834 5.59167C7.43334 5.91667 7.43334 6.44167 7.75834 6.76667L10.9917 10L7.75834 13.2333C7.43334 13.5583 7.43334 14.0833 7.75834 14.4083C8.08334 14.7333 8.60834 14.7333 8.93334 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73334 12.7583 9.40833L8.93334 5.58333C8.61667 5.26667 8.08334 5.26667 7.75834 5.59167Z" fill="#17C99E"/>
+                    </svg>
+                </div>
+                <p class="climb_status_no">현재 등산중이 아닙니다 <br> 산타러들과 지금 등산을 떠나보세요!</p>
+                <p style="display: none;" class="climb_status_on">지금 <span th:text="${member.nickname}"></span>님은 <span id="status_mountain_name">도봉산</span>을 등산중입니다.</p>
+                <p style="display: none;" class="climb_status_on start_time climb_start_time">시작시간 : <span id="climb_hour"> 10</span>시 <span id="climb_minutes"> 35</span>분</p>
+            </div>
+            <div class="main_box weather_content">
+                <div class="box_txt">
+                    <p>오늘의 날씨</p>
+<!--                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.75834 5.59167C7.43334 5.91667 7.43334 6.44167 7.75834 6.76667L10.9917 10L7.75834 13.2333C7.43334 13.5583 7.43334 14.0833 7.75834 14.4083C8.08334 14.7333 8.60834 14.7333 8.93334 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73334 12.7583 9.40833L8.93334 5.58333C8.61667 5.26667 8.08334 5.26667 7.75834 5.59167Z" fill="#17C99E"/>
+                    </svg>-->
+                </div>
+                <p>오늘 날씨는 <span id="weather_info">로딩중</span>이며<br>온도는 <span id="temperature">0</span>℃입니다.</p>
+            </div>
+            <div class="main_box" id="request_mt">
+                <div class="box_txt">
+                    <p>산 추가요청</p>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.75834 5.59167C7.43334 5.91667 7.43334 6.44167 7.75834 6.76667L10.9917 10L7.75834 13.2333C7.43334 13.5583 7.43334 14.0833 7.75834 14.4083C8.08334 14.7333 8.60834 14.7333 8.93334 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73334 12.7583 9.40833L8.93334 5.58333C8.61667 5.26667 8.08334 5.26667 7.75834 5.59167Z" fill="#17C99E"/>
+                    </svg>
+                </div>
+                <p>산을 추가요청하거나 산 내용을 수정해보세요</p>
+                <p></p>
+            </div>
+        </section>
+        <!-- footer -->
+        <div th:replace="~{fragment/footer :: bottom_navigation_bar ('home')}"></div>
+    </div>
+</body>
+<script th:inline="javascript">
+
+    $(function(){
+        let bannerBackgroundImage = "[(${banner.mntimages})]";
+        document.getElementById("logo_view").style.background = "linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("+ bannerBackgroundImage +") no-repeat center 0";
+        $("#logo_view").css("background-size", "cover");
+        console.log('%c 로그인 상태 ', 'background: #2BFC5F; color: #FFFFFF; font-weight:bold');
+        let mainClimbTimeSet = localStorage.getItem("climb.time");
+        let statusClimbMountainName = localStorage.getItem("climb.mntiname");
+        // 등산중 여부
+        if(climbFlag && mainClimbTimeSet && statusClimbMountainName){
+            $("#status_mountain_name").text(statusClimbMountainName);
+            $("#climb_hour").text(moment(mainClimbTimeSet).hours());
+            $("#climb_minutes").text(moment(mainClimbTimeSet).minutes());
+            $(".climb_status_on").show();
+            $(".climb_status_no").hide();
+            $("#climb_status").click(function (){
+                location.href="https://santa-community.co.kr/map/climb";
+            });
+        }else{
+            $(".climb_status_no").show();
+            $(".climb_status_on").hide();
+            $("#climb_status").click(function (){
+                location.href="https://santa-community.co.kr/map";
+            });
+        }
+
+        if(window.location.search.substring(7) == "1"){
+            $("#guest_alert").fadeIn(200);
+            $(document).on("click",".hide_guest_alert",function (){
+                $("#guest_alert").fadeOut(200);
+            });
+            $(".goto_login").on("click",function(){
+                location.replace("/guest/logout");
+            });
+        }
+
+        let tag1 = "[(${banner.tag1})]";
+        let tag2 = "[(${banner.tag2})]";
+        let tag3 = "[(${banner.tag3})]";
+        let tag4 = "[(${banner.tag4})]";
+        if(tag1) $("#tags").append("<span>#"+ tag1 +"</span>");
+        if(tag2) $("#tags").append("<span>#"+ tag2 +"</span>");
+        if(tag3) $("#tags").append("<span>#"+ tag3 +"</span>");
+        if(tag4) $("#tags").append("<span>#"+ tag4 +"</span>");
+
+        // 위치정보 조회
+        // 위치정보를 불러온 시간 체크 , 캐싱
+        let locationRefreshTime = localStorage.getItem("weather.time");
+        // 저장된 시간이 없거나 새로고침된시간이 15분이지난경우 다시불러옴
+        if((moment().diff(moment(locationRefreshTime), 'minutes') >= 15) || !locationRefreshTime){
+            Print.postMessage("location");
+        }else{
+            let storageWeatherId = localStorage.getItem("weather.status.info");
+            let storageWeatherTemp = localStorage.getItem("weather.status.temperature");
+            $("#weather_info").text(storageWeatherId);
+            $("#temperature").text(storageWeatherTemp);
+        }
+
+
+        $("#request_mt").click(function(){
+            location.href="https://santa-community.co.kr/mt/request";
+        });
+
+        $(".hide_alert").on("click",function (){
+            $("#chat_alert").fadeOut(200);
+        });
+
+        $("#flag_climb").on("click",function(){
+            if(climbFlag && statusClimbMountainName && mainClimbTimeSet){
+                location.replace("https://santa-community.co.kr/map/climb");
+            }else{
+                location.replace("https://santa-community.co.kr/map");
+            }
+        });
+
+        $(".login_user_box").on("click",function(){
+            let loginUserValue = $(this).attr("value");
+            let currentUserValue = "[(${member.socialId})]";
+            let currentUserImage = "[(${member.memberImage})]";
+            // 게스트로그인 분기
+            if(currentUserValue.includes('-')) {
+                $("#guest_alert").fadeIn(200);
+                $(".goto_login").on("click",function(){
+                    location.replace("/guest/logout");
+                });
+                return false;
+            }
+
+            $("#chat_alert").fadeIn(200);
+
+            $(".start_chat").click(function(){
+                $.ajax({
+                    type : "POST",
+                    url : "/chat/room",
+                    data : {
+                        "name" : "채팅",
+                        "socialId1" : currentUserValue,
+                        "socialId2" : loginUserValue
+                    },
+                    success : function(res){
+
+                        localStorage.setItem('chat.senderImage',currentUserImage);
+                        localStorage.setItem('chat.sender',currentUserValue);
+                        localStorage.setItem('chat.roomId',res);
+                        localStorage.setItem('chat.opponentSender', loginUserValue);
+                        window.location.href = "https://santa-community.co.kr/chat/room/enter/" + res;
+                    },
+                    error : function(XMLHttpRequest, textStatus, errorThrown){
+                        console.log("채팅 통신 실패. = {} " , errorThrown)
+                    }
+                });
+            });
+        });
+    });
+
+    $(".more_view").on("click",function(){
+        let recommend_mt = $("#recommend_mt").text();
+        location.href = "https://santa-community.co.kr/mt/search/"+ recommend_mt;
+    });
+
+
+    $(".weather_content").on("click",function (){
+        Print.postMessage("날씨정보를 재로딩합니다");
+        Print.postMessage("location");
+    });
+
+    // 위치정보를 불러와서 날씨표기
+    function flutterLocation(lat, lon){
+        if(!lat || !lon) console.log("위치정보 조회실패");
+
+        $.ajax({
+            type : "GET",
+            url : "/weather/" + lat + "/" + lon,
+            success : function(res){
+                res = JSON.parse(res);
+                let weatherId = res['weather'][0]['id'];
+                let weatherTemp = res['main']['temp'];
+
+                $("#weather_info").text(wDescEngToKor(weatherId));
+                $("#temperature").text(parseInt(weatherTemp)-273);
+
+                // 날씨 업데이트 시간 저장
+                localStorage.setItem("weather.time",moment());
+                localStorage.setItem("weather.status.info", wDescEngToKor(weatherId));
+                localStorage.setItem("weather.status.temperature", parseInt(weatherTemp)-273);
+                localStorage.setItem("weather.location", [lat,lon]);
+            },
+            error : function(XMLHttpRequest, textStatus, errorThrown){
+                console.log("날씨정보 조회 실패");
+            }
+        });
+    }
+
+
+    function wDescEngToKor(w_id) {
+        let w_id_arr = [201,200,202,210,211,212,221,230,231,232,
+            300,301,302,310,311,312,313,314,321,500,
+            501,502,503,504,511,520,521,522,531,600,
+            601,602,611,612,615,616,620,621,622,701,
+            711,721,731,741,751,761,762,771,781,800,
+            801,802,803,804,900,901,902,903,904,905,
+            906,951,952,953,954,955,956,957,958,959,
+            960,961,962];
+        let w_kor_arr = ["가벼운 비를 동반한 천둥구름","비를 동반한 천둥구름","폭우를 동반한 천둥구름","약한 천둥구름",
+            "천둥구름","강한 천둥구름","불규칙적 천둥구름","약한 연무를 동반한 천둥구름","연무를 동반한 천둥구름",
+            "강한 안개비를 동반한 천둥구름","가벼운 안개비","안개비","강한 안개비","가벼운 적은비","적은비",
+            "강한 적은비","소나기와 안개비","강한 소나기와 안개비","소나기","악한 비","중간 비","강한 비",
+            "매우 강한 비","극심한 비","우박","약한 소나기 비","소나기 비","강한 소나기 비","불규칙적 소나기 비",
+            "가벼운 눈","눈","강한 눈","진눈깨비","소나기 진눈깨비","약한 비와 눈","비와 눈","약한 소나기 눈",
+            "소나기 눈","강한 소나기 눈","흐릴예정","흐릴예정","흐릴예정","모래 먼지","흐릴예정","모래","먼지가 많을예정","화산재가 날릴예정","돌풍이 불 예정",
+            "토네이도","구름 한 점 없는 맑은 하늘","약간의 구름이 낀 하늘","드문드문 구름이 낀 하늘","구름이 거의 없는 하늘",
+            "구름으로 뒤덮인 흐린 하늘","토네이도","태풍","허리케인","한랭","고온","바람부는","우박","바람이 거의 없는",
+            "약한 바람","부드러운 바람","중간 세기 바람","신선한 바람","센 바람","돌풍에 가까운 센 바람","돌풍이 불 예정",
+            "심각한 돌풍","폭풍","강한 폭풍","허리케인"];
+        for(let i=0; i<w_id_arr.length; i++) {
+            if(w_id_arr[i]==w_id) {
+                return w_kor_arr[i];
+                break;
+            }
+        }
+        return "none";
+    }
+</script>
+</html>

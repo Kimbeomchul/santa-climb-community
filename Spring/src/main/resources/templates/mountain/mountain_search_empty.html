@@ -1,0 +1,86 @@
+<!doctype html>
+
+<html xmlns:th="http://www.thymleaf.org">
+<script type="text/javascript" src="/js/santaUtil.min.js"></script>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<div th:replace="~{fragment/header :: linkHead}"></div>
+
+<body>
+    <div class="wrap">
+
+        <section class="main mountain_search">
+            <header class="header">
+                <a href="/mt/list">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_2_882)">
+                        <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z" fill="#374957"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_2_882">
+                        <rect width="24" height="24" fill="white"/>
+                        </clipPath>
+                        </defs>
+                    </svg>
+                </a>
+                <h2><span th:text="${search}"></span> 검색결과</h2>
+                <div class="search_icon">
+                    <svg width="23" height="24" viewBox="0 0 23 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_2_373)">
+                        <path d="M22.6761 22.2937L16.9666 16.3247C18.5225 14.3353 19.2875 11.7968 19.1033 9.23426C18.9191 6.67173 17.7999 4.28123 15.9771 2.55722C14.1544 0.833208 11.7675 -0.0924103 9.31023 -0.0281784C6.85298 0.0360534 4.51334 1.08522 2.77525 2.90231C1.03716 4.7194 0.0336128 7.16539 -0.0278264 9.73434C-0.0892655 12.3033 0.796108 14.7987 2.44516 16.7043C4.09421 18.6099 6.38078 19.78 8.8319 19.9725C11.283 20.1651 13.7111 19.3653 15.6141 17.7387L21.3235 23.7077C21.5039 23.8899 21.7456 23.9907 21.9964 23.9884C22.2471 23.9861 22.4871 23.8809 22.6644 23.6955C22.8417 23.5101 22.9423 23.2593 22.9445 22.9971C22.9467 22.7349 22.8503 22.4823 22.6761 22.2937ZM9.56501 18.0007C8.05155 18.0007 6.57208 17.5315 5.31369 16.6525C4.0553 15.7734 3.0745 14.524 2.49532 13.0622C1.91615 11.6004 1.76461 9.99182 2.05987 8.43998C2.35513 6.88813 3.08393 5.46266 4.15411 4.34384C5.22428 3.22502 6.58777 2.4631 8.07215 2.15442C9.55652 1.84573 11.0951 2.00416 12.4934 2.60966C13.8916 3.21516 15.0867 4.24054 15.9276 5.55614C16.7684 6.87173 17.2172 8.41845 17.2172 10.0007C17.2149 12.1217 16.408 14.1551 14.9734 15.6549C13.5388 17.1547 11.5938 17.9983 9.56501 18.0007Z" fill="#374957"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_2_373">
+                        <rect width="22.9565" height="24" fill="white"/>
+                        </clipPath>
+                        </defs>
+                    </svg>
+                    <input id="searchInput" class="search_valid" type="text">
+                </div>
+                
+            </header>
+
+            <div class="m_search_empty">
+               <div class="empty_box">
+                   <img src="/img/nickname_circle.svg" alt="">
+                   <h3>검색결과가 없습니다</h3>
+                   <p>추가하고싶은 산을 보내주세요!<br>
+                    빠른시일내에 추가하도록 하겠습니다!
+                    </p>
+                    <button onclick="location.href='https://santa-community.co.kr/mt/request'">산 추가하러가기</button>
+               </div>
+            </div>
+
+        </section>
+
+    </div>
+    <script>
+        $(function(){
+            let cho = /[ㄱ-ㅎ|ㅏ-ㅣ]/g
+
+            $(".search_icon > svg").click(function(){
+                $(".search_icon > input").toggleClass('active');
+                if($(".search_icon > input").hasClass('active') == false && $(".search_icon > input").val() != ''){
+                    let val_input = $(".search_icon > input").val().trim();
+                    if(cho.test(val_input)){
+                        $(".search_icon > input").val("");
+                        Print.postMessage('초성 검색은 불가능합니다');
+                        return false;
+                    }
+                    if(val_input == "산"){
+                        $(".search_icon > input").val("");
+                        Print.postMessage('검색결과가 많습니다. 다른검색어로 검색해주세요');
+                    }
+                    location.href= "https://santa-community.co.kr/mt/search/"+val_input;
+                }
+            });
+
+            $("#searchInput").on("keydown",function (e){
+                if(e.key === "Enter"){
+                    $(".search_icon > svg").click();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+
+<head>
+    <script type="text/javascript" src="/js/santaUtils.js"></script>
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment-with-locales.min.js"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=8b783d375f8f95534a8248d8fc9a14e5&libraries=services,clusterer,drawing"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/font.css" type="text/css">
+    <link rel="stylesheet" type="text/css" href="/css/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/slick-theme.css"/>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="/js/slick.min.js"></script>
+    <script type="text/javascript" src="/js/slick.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+</head>
+
+
+<script type="text/javascript">
+    var map = null;
+
+    $(document).ready(function(){
+        // Init mntiname
+        let localMntiName = localStorage.getItem("climb.mntiname");
+        if(!localMntiName){
+            const mntiname = window.location.search.substring(10);
+            localStorage.setItem("climb.mntiname", decodeURI(mntiname));
+        }
+
+        // Init timer
+        climbTimer();
+        // 위치권한 항상허용 ( 백그라운드용 )
+        Print.postMessage("permissionAlways");
+
+        // 등산중이 아닐경우
+        if(!climbFlag) {
+            // Init Climb
+            Print.postMessage("climb");
+        }
+
+        // Init location
+        Print.postMessage("location");
+
+        // Init Climb Distance
+        localStorage.setItem("climb.distance", 0);
+    });
+
+
+
+    function flutterLocation(lat, lon){
+        if(!lat || !lon) Print.postMessage("위치정보 조회실패");
+        
+        if(!map) {
+            var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+                mapOption = {
+                    center: new kakao.maps.LatLng(lat, lon), // 지도의 중심좌표
+                    level: 3 // 지도의 확대 레벨
+                };
+    
+            map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+            // 지도 중심을 부드럽게 이동시킵니다
+            // 만약 이동할 거리가 지도 화면보다 크면 부드러운 효과 없이 이동합니다
+            var imageSrc = '/img/map_start_pin.svg', // 마커이미지의 주소입니다
+                imageSize = new kakao.maps.Size(20, 20), // 마커이미지의 크기입니다
+                imageOption = {offset: new kakao.maps.Point(20, 20)}; // 마커이미지의 옵션입니다. 마커의 좌표와 일치시킬 이미지 안에서의 좌표를 설정합니다.
+
+            // 마커의 이미지정보를 가지고 있는 마커이미지를 생성합니다
+            var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption),
+                markerPosition = new kakao.maps.LatLng(lat,lon); // 마커가 표시될 위치입니다
+
+            // 마커를 생성합니다
+            var marker = new kakao.maps.Marker({
+                position: markerPosition,
+                image: markerImage // 마커이미지 설정
+            });
+
+            // 마커가 지도 위에 표시되도록 설정합니다
+            marker.setMap(null);
+            marker.setMap(map);
+            map.panTo(markerPosition);
+
+            // 지도에 표시할 선을 생성합니다
+            var polyline = new kakao.maps.Polyline({
+                path: [], // 선을 구성하는 좌표배열 입니다
+                strokeWeight: 6, // 선의 두께 입니다
+                strokeColor: '#0EBB91', // 선의 색깔입니다
+                strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                strokeStyle: 'solid' // 선의 스타일입니다
+            });
+
+            // 지도에 선을 표시합니다
+            polyline.setMap(map);
+
+
+            // set Interval
+            setInterval(function() {
+                // 등산중 여부
+                if(climbFlag){
+                    let climbStatus = localStorage.getItem("climb.location");
+                    if(climbStatus){
+                        let climbLatLon = climbStatus.split(",");
+                        // 선을 구성하는 좌표 배열입니다. 이 좌표들을 이어서 선을 표시합니다
+                        var linePath = polyline.getPath();
+                        let sumDistance = 0;
+
+
+                        // todo : 1KM ?? 500M ? 순간이동되는 듯한 거리이동은 무시하게 짜야함
+                        linePath.push(new kakao.maps.LatLng(lat, lon));
+                        for(let y=0; y<climbLatLon.length-2; y+=2){
+                            sumDistance += getDistance(climbLatLon[y+2],climbLatLon[y+3], climbLatLon[y], climbLatLon[y+1]);
+                            localStorage.setItem("climb.distance" , sumDistance);
+                            $("#climb_length").text(sumDistance.toFixed(3)); // 소숫점 한자리까지
+                            console.log(sumDistance);
+                        }
+
+                        polyline.setPath(linePath);
+                        
+                        polyline.setMap(map);
+                    }
+
+
+                }
+            }, 10000);
+        }
+
+        // 지도 조정
+        $("#map").height($(document).height() - $("#content_info").height() - 20);
+    }
+
+    /** 화면 캡쳐 후 스크린샷 처리 -> kakaoMap 에서 오류반환으로 불가 및 카카오맵 저작권걸려있음
+        html2canvas(document.getElementById("map"), {
+        useCORS: true,
+        onrendered: function(canvas) {
+            let myImage = canvas.toDataURL();
+            console.log(myImage)
+            downloadURI(myImage, "저장할 파일명.png")
+        }
+        });
+        function downloadURI(uri, name){
+        var link = document.createElement("a")
+        link.download = name;
+        link.href = uri;
+        document.body.appendChild(link);
+        link.click();
+        }
+    */
+
+    $(document).on("click","#climb_dismiss", function (){
+
+        let distanceChk = localStorage.getItem("climb.distance");
+        let distanceM = parseFloat(distanceChk);
+        if (distanceM <= 0.5){
+            $(".show_alert").fadeIn(200);
+            // 모달 취소
+            $(".cancel_alert").click(function (){ $(".show_alert").fadeOut(200); });
+            $(".end_interval_distance").click(function (){
+                climbFlag = false;
+                localStorage.removeItem("climb.status");
+                localStorage.removeItem("climb.location");
+                localStorage.removeItem("climb.time");
+                localStorage.removeItem("climb.mntiname");
+                Print.postMessage("dismiss");
+                location.replace("/map");
+            });
+        }else{
+            $(".end_modal").fadeIn(200);
+
+            // 모달 취소
+            $(".cancel_climb").click(function (){ $(".end_modal").fadeOut(200); });
+            // 등산종료
+            $(".end_interval").on("click",function (){
+                // 등산정보 저장
+                climbResult();
+                climbFlag = false;
+                localStorage.removeItem("climb.status");
+                localStorage.removeItem("climb.location");
+                localStorage.removeItem("climb.time");
+                localStorage.removeItem("climb.mntiname");
+                Print.postMessage("dismiss");
+                location.replace("/map");
+            });
+        }
+    });
+</script>
+
+<body style="overflow-x: hidden">
+    <div class="wrap" style="position:inherit;">
+        <!-- Alert -->
+        <div class="end_modal" style="display: none;">
+            <div class="modal_box" style="z-index: 9990;">
+                <h3>등산을 종료하시겠습니까?</h3>
+                <div class="modal_bottom">
+                    <p class="cancel_climb">아니요</p>
+                    <p class="end_interval">등산종료</p>
+                </div>
+            </div>
+        </div>
+        <!-- Alert -->
+        <!-- Alert -->
+        <div class="show_alert" style="display: none;">
+            <div class="modal_box" style="z-index: 9990;">
+                <h3>500M 이하의 거리는 기록되지않습니다</h3>
+                <p>등산을 종료하시겠습니까?</p>
+                <div class="modal_bottom">
+                    <p class="cancel_alert">아니요</p>
+                    <p class="end_interval_distance">등산종료</p>
+                </div>
+            </div>
+        </div>
+        <!-- Alert -->
+
+        <section class="main around">
+            <header class="header">
+                <a id="back_btn" href="#">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_2_882)">
+                            <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z" fill="#374957"/>
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_2_882">
+                                <rect width="24" height="24" fill="white"/>
+                            </clipPath>
+                        </defs>
+                    </svg>
+                </a>
+                <h2>등산기록</h2>
+                <div></div>
+            </header>
+
+            <div class="my_around" id="map" style="height:100%; z-index: 0;">
+            </div>
+            <div class="more_info" id="content_info" style="z-index: 1; text-align: center;">
+                <ul style="padding-top:3%;">
+                    <li><h4 style="font-size: 13px">등산시간</h4></li>
+                    <li style="font-size: 30px; font-weight: bolder; padding-bottom: 5%;" class="climb_time">00:00</li>
+                </ul>
+                <ul>
+                    <li><h4 style="font-size: 14px; padding-bottom: 1%; font-weight: 300">이동거리(km)</h4></li>
+                    <li style="font-size: 13px" id="climb_length">0</li>
+                </ul>
+                <div class="slick_slider" style="padding-top: 3%">
+                    <div class="more_info_box">
+                        <button id="climb_dismiss">등산종료</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+<script th:inline="javascript">
+    $(function(){
+        $(".more_info").css('bottom', '0');
+        $("#back_btn").on("click",function (){
+           location.replace("https://santa-community.co.kr/main");
+        });
+    });
+</script>
+
+</html>

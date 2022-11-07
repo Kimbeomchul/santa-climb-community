@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mozzi.santa.mapper.ChatMapper">
+
+    <select id="selectChat" resultType="com.mozzi.santa.dto.modal.ChatData">
+        /* 채팅방 검색 */
+        SELECT
+            a.chatData
+             ,a.roomId
+             ,a.me as myUser
+             ,a.myImage as myUserImage
+             ,a.opponent as opponentUser
+             ,(SELECT memberImage FROM member b WHERE a.opponent = b.socialId) as opponentUserImage
+        FROM chat a
+        WHERE a.roomId = #{roomId}
+    </select>
+
+    <select id="selectAllChatRooms" resultType="com.mozzi.santa.dto.modal.ChatRoom">
+        /* 채팅방 검색 */
+        SELECT
+            member1 as roomMember1
+            ,member2 as roomMember2
+            ,chatUUID as roomId
+        FROM chat_room
+    </select>
+
+    <update id="updateChat">
+        UPDATE
+            chat
+        SET
+            chatData = #{chatData}
+        WHERE
+            roomId = #{roomId}
+    </update>
+
+
+    <insert id="saveChat">
+        /* 채팅 추가 */
+        INSERT
+        INTO chat(roomId, me, myImage, opponent, chatData)
+        VALUES (#{roomId},#{me},#{myImage},#{opponent},#{chatData})
+    </insert>
+
+    <insert id="insertChatRoom">
+        /* 채팅방 추가 */
+        INSERT
+        INTO chat_room(member1, member2, chatUUID)
+        VALUES (#{member1},#{member2},#{chatUUID})
+    </insert>
+
+    <select id="findChatRoomId" resultType="String">
+        /* 채팅방 검색 */
+        SELECT
+            chatUUID
+        FROM chat_room
+        WHERE (member1 = #{socialId1} AND member2 = #{socialId2}) OR (member1 = #{socialId2} AND member2 = #{socialId1})
+    </select>
+
+    <select id="getChatLength" resultType="Long">
+        /* 채팅방 카운터 검색 */
+        SELECT
+            a.messageCounter
+        FROM chat_count a
+        WHERE a.roomId = #{roomId} AND a.socialId = #{me}
+    </select>
+
+    <select id="findChatRoom" resultType="com.mozzi.santa.dto.modal.ChatRoom">
+        SELECT
+            member1 as roomMember1
+            ,member2 as roomMember2
+            ,chatUUID as roomId
+        FROM chat_room
+        WHERE member1 = #{socialId} OR member2 = #{socialId2}
+    </select>
+
+    <update id="updateChatLength">
+        UPDATE
+            chat_count
+        SET
+            messageCounter = #{chatDataLength}
+        WHERE
+            roomId = #{roomId}
+        AND
+            socialId = #{me}
+    </update>
+
+
+    <insert id="saveChatLength">
+        /* 채팅 추가 */
+        INSERT
+        INTO chat_count(roomId, socialId, messageCounter)
+        VALUES (#{roomId},#{me},#{chatDataLength})
+    </insert>
+
+    <delete id="removeChatRoom" >
+        /* 채팅방 삭제 */
+        DELETE
+        FROM chat_room
+        WHERE chatUUID = #{roomId}
+    </delete>
+
+    <delete id="removeMsgData" >
+        /* 채팅방 내용 삭제 */
+        DELETE
+        FROM chat
+        WHERE roomId = #{roomId}
+    </delete>
+
+    <delete id="removeMsgCounter" >
+        /* 채팅방 카운터 삭제 */
+        DELETE
+        FROM chat_count
+        WHERE roomId = #{roomId} AND socialId = #{socialId}
+    </delete>
+</mapper>

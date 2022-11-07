@@ -1,0 +1,80 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="/js/santaUtil.min.js"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=8b783d375f8f95534a8248d8fc9a14e5&libraries=services,clusterer,drawing"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/font.css" type="text/css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+</head>
+
+<body style="overflow-x: hidden">
+<div class="wrap" style="position:inherit;">
+        <header class="header">
+            <a href="https://santa-community.co.kr/mt/climb/reward">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clip-path="url(#clip0_2_882)">
+                        <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z" fill="#374957"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_2_882">
+                            <rect width="24" height="24" fill="white"/>
+                        </clipPath>
+                    </defs>
+                </svg>
+            </a>
+            <h2>등산기록</h2>
+            <div></div>
+        </header>
+
+        <div id="map" style="height:100vh; width: 100%; z-index: 0;">
+
+        </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+    let climbStatus = "[(${result.climbLocation})]";
+    climbStatus = climbStatus.replace(/&quot;/g, '');
+    climbStatus = climbStatus.replaceAll("]","").replaceAll("[","");
+
+    if(climbStatus){
+        let climbLatLon = climbStatus.split(",");
+        let lat = climbLatLon[0];
+        let lon = climbLatLon[1];
+        // 선을 구성하는 좌표 배열입니다. 이 좌표들을 이어서 선을 표시합니다
+        var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+            mapOption = {
+                center: new kakao.maps.LatLng(lat, lon), // 지도의 중심좌표
+                level: 3 // 지도의 확대 레벨
+            };
+
+        var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+        map.panTo(new kakao.maps.LatLng(lat,lon));
+
+        var linePath = [];
+        linePath.push(new kakao.maps.LatLng(lat, lon));
+        for(let x=0; x<climbLatLon.length; x+=2 ){
+            console.log(climbLatLon[x] , climbLatLon[x-1]);
+            linePath.push(new kakao.maps.LatLng(climbLatLon[x], climbLatLon[x+1]));
+        }
+
+        // 지도에 표시할 선을 생성합니다
+        var polyline = new kakao.maps.Polyline({
+            path: linePath, // 선을 구성하는 좌표배열 입니다
+            strokeWeight: 6, // 선의 두께 입니다
+            strokeColor: '#0EBB91', // 선의 색깔입니다
+            strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+            strokeStyle: 'solid' // 선의 스타일입니다
+        });
+        // 지도에 선을 표시합니다
+        polyline.setMap(map);
+    }
+
+</script>
+</html>

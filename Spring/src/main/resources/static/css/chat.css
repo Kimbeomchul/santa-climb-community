@@ -1,0 +1,94 @@
+body,html{
+    height: 100%;
+    margin: 0;
+}
+
+.contacts li{
+    width: 100% !important;
+    padding: 5px 10px;
+    margin-bottom: 15px !important;
+}
+
+.user_img_msg{
+    height: 45px;
+    width: 45px;
+    border:1.5px solid #f5f6fa;
+
+}
+
+.img_cont_msg{
+    height: 40px;
+    width: 40px;
+}
+.user_info span{
+    font-size: 20px;
+    color: white;
+}
+.user_info p{
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+}
+.video_cam span{
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 20px;
+}
+.msg_cotainer{
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 15px;
+    border-radius: 25px;
+    background-color: #82ccdd;
+    padding: 12px;
+    position: relative;
+    max-width: 70%;
+}
+.msg_cotainer_send{
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-right: 15px;
+    border-radius: 25px;
+    background-color: #78e08f;
+    padding: 12px;
+    position: relative;
+    max-width: 70%;
+}
+.msg_time{
+    position: absolute;
+    left: 10px;
+    bottom: -15px;
+    color: black;
+    font-size: 10px;
+}
+.msg_time_send{
+    position: absolute;
+    right: 10px;
+    bottom: -15px;
+    color: black;
+    font-size: 10px;
+}
+
+.action_menu ul{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.action_menu ul li{
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+}
+.action_menu ul li i{
+    padding-right: 10px;
+
+}
+.action_menu ul li:hover{
+    cursor: pointer;
+    background-color: rgba(0,0,0,0.2);
+}
+@media(max-width: 576px){
+    .contacts_card{
+        margin-bottom: 15px !important;
+    }
+}

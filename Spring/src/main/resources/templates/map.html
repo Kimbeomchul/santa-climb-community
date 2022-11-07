@@ -1,0 +1,537 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="/js/santaUtil.min.js"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=8b783d375f8f95534a8248d8fc9a14e5&libraries=services,clusterer,drawing"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment-with-locales.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/font.css" type="text/css">
+    <link rel="stylesheet" type="text/css" href="/css/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/slick-theme.css"/>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <script type="text/javascript" src="/js/slick.min.js"></script>
+    <script type="text/javascript" src="/js/slick.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+</head>
+
+
+<script type="text/javascript">
+    var map , myMarker = null;
+    $(document).ready(function(){
+
+        // Init location
+        let mainLocationData = localStorage.getItem("weather.location");
+        if(mainLocationData){
+            let mainLatLon = mainLocationData.split(",");
+            flutterLocation(mainLatLon[0],mainLatLon[1]);
+        }else{
+            Print.postMessage("location");
+        }
+
+
+        // 위치정보 불러오기
+        $(".flight_icon").on("click",function(){
+            Print.postMessage("현재위치를 불러오는 중입니다");
+            Print.postMessage("location");
+        });
+
+    });
+
+    // 등산하기 이벤트
+    $(document).on("click" ,".start_climb" ,function (){
+        let guestYsno = "[(${guest})]";
+        if(guestYsno == "Y"){
+            $("#guest_alert").fadeIn(200);
+            $(".goto_login").on("click",function(){
+                location.replace("/guest/logout");
+            });
+            $(".hide_alert").on("click",function (){
+                $("#guest_alert").fadeOut(200);
+            });
+            console.log("!!!!");
+            return false;
+        }
+        let thisMtName = $(this).val();
+        $(".start_modal").fadeIn(200);
+        $("#climb_mt_name").text(thisMtName);
+        // 모달 취소
+        $(".cancel_climb").click(function (){ $(".start_modal").fadeOut(200); })
+
+        // 등산시작
+        $(".start_interval").on("click",function (){
+            localStorage.setItem("climb.time", moment());
+            location.replace("/map/climb?mntiname=" + thisMtName);
+        });
+    });
+
+    // 위치정보를 불러와서 날씨표기
+    function flutterLocation(lat, lon){
+        if(!lat || !lon) console.log("위치정보 조회실패");
+
+        if(!map) {
+            var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+                mapOption = {
+                    center: new kakao.maps.LatLng(lat, lon), // 지도의 중심좌표
+                    level: 3 // 지도의 확대 레벨
+                };
+    
+            map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+            // 근처 산 설정
+            var allMountain = new Map();
+            // 정렬 키맵
+            let keyAscMap;
+            $.ajax({
+                type: "GET",
+                async: false,
+                url: "https://santa-community.co.kr/mt/mapList",
+                success : function(result){
+                    let mountain;
+                    for (let i = 0; i < result.length; i++){
+                        mountain = result[i];
+                        allMountain.set(i, getDistance(lat, lon, mountain.mntilat , mountain.mntilon));
+                    }
+
+                    // sorting
+                    keyAscMap = new Map([...allMountain.entries()].sort((a, b) => a[1] - b[1]));
+                    console.log("distance asc = {}" , keyAscMap);
+
+                    let mapCount = 0;
+                    // innerHTML -- 추천 산 세개표시
+                    for(let keyMap of keyAscMap.keys()){
+                        let mountain = result[keyMap];
+                        let mountainImage = mountain.mntimages;
+                        let mountainHeight = mountain.mntihigh;
+                        if (!mountainImage) mountainImage = 'img/map_bottom_img.png';
+                        if (!mountainHeight) mountainHeight = 0;
+                        if(mapCount >= 3) return;
+                        $(".recommend_address" + mapCount).text(mountain.mntiadd);
+                        $(".recommend_distance" + mapCount).text(santaUtils.returnWithComma(parseInt(keyAscMap.get(keyMap))) + "km");
+                        $(".recommend_height" + mapCount).text(mountainHeight + "m");
+                        $(".recommend_likes" + mapCount).text(mountain.mntlikes);
+                        $(".recommend_name" + mapCount).text(mountain.mntiname);
+                        $(".start_climb" + mapCount).val(mountain.mntiname);
+                        $(".recommend_image" + mapCount).attr('src', mountainImage);
+                        ++mapCount;
+                    }
+                },
+                error : function(err){
+                    console.log("지도 에러 = {}", err);
+                }
+            });
+
+
+            // 현재위치 마커시작 -- start
+            var imageSrc = '/img/map_pins.svg',
+                imageSize = new kakao.maps.Size(35, 35), // 마커이미지의 크기
+                imageOption = {offset: new kakao.maps.Point(27, 69)}; // 마커이미지의 옵션
+
+            var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption),
+                markerPosition = new kakao.maps.LatLng(lat,lon);
+
+            myMarker = new kakao.maps.Marker({
+                position: markerPosition,
+                image: markerImage
+            });
+
+            myMarker.setMap(null);
+            myMarker.setMap(map);
+            map.panTo(markerPosition);
+            // 현재위치 마커종료 -- end
+
+
+            // 검색이벤트 -- start
+            let cho = /[ㄱ-ㅎ|ㅏ-ㅣ]/g;
+            $(".search > div").on("click",function(){
+                $(".search > input").toggleClass('active');
+
+                if($(".search > input").hasClass('active') == false && $(".search > input").val() != ''){
+                    let val_input = $(".search > input").val().trim();
+                    if(cho.test(val_input) || val_input == '산'){
+                        $(".search_icon > input").val("");
+                        Print.postMessage('검색이 불가능한 단어입니다');
+                        $(".more_info").animate({bottom: "0" } ,100);
+                        return false;
+                    }
+                    if(val_input == '') {
+                        $(".more_info").animate({bottom: "0" } ,100);
+                        return false;
+                    }
+
+                    var infowindow = new kakao.maps.InfoWindow({zIndex:1});
+
+                    $.ajax({
+                        type: "GET",
+                        url: "https://santa-community.co.kr/mt/map/search/" + val_input,
+                        success : function(result){
+                            console.log(result);
+                            // 검색 데이터가 존재하지않는경우
+                            if(result.length == 0){
+                              Print.postMessage(val_input + ' 검색결과가 없습니다');
+                            }
+                            for (let i=0; i<result.length; i++) {
+                                var bounds = new kakao.maps.LatLngBounds();
+
+                                for (let i=0; i<result.length; i++) {
+                                    displayMarker(lat,lon,result[i]);
+                                    bounds.extend(new kakao.maps.LatLng(result[i]['mntilat'], result[i]['mntilon']));
+                                }
+                                map.setBounds(bounds);
+                            }
+                        },
+                        error : function(err){
+                            console.log("지도 에러 = {}", err);
+                            Print.postMessage('검색결과가 없습니다');
+                        }
+                    });
+
+                    function displayMarker(lat,lon,place) {
+                        var marker = new kakao.maps.Marker({
+                            map: map,
+                            position: new kakao.maps.LatLng(place.mntilat, place.mntilon)
+                        });
+
+                        kakao.maps.event.addListener(marker, 'click', function() {
+                            let defaultImage = place.mntimages;
+                            let defaultHeight = place.mntihigh;
+                            if (!defaultImage) defaultImage = 'img/map_bottom_img.png';
+                            if (!defaultHeight) defaultHeight = 0;
+                            $(".recommend_address0").text(place.mntiadd);
+                            $(".recommend_distance0").text(santaUtils.returnWithComma(parseInt(getDistance(lat, lon, place.mntilat , place.mntilon))) + "km");
+                            $(".recommend_height0").text(defaultHeight + "m");
+                            $(".recommend_likes0").text(place.mntlikes);
+                            $(".recommend_name0").text(place.mntiname);
+                            $(".start_climb0").val(place.mntiname);
+                            $(".recommend_image0").attr('src', defaultImage);
+
+                            infowindow.setContent('<div style="padding:5px;font-size:13px;">' + place.mntiname + '</div>');
+                            infowindow.open(map, marker);
+                        });
+                    }
+                    $(".search > input").val("");
+                    $(".more_info").animate({bottom: "0" } ,100);
+                }
+            });
+            // 검색이벤트 -- end
+        } else { // 지도가 있으면
+              myMarker.setMap(null);
+              myMarker.setMap(map);
+              map.panTo(new kakao.maps.LatLng(lat,lon));
+        }
+    }
+
+    $(document).on("focus", "#searchInput",function(){
+        $(".more_info").animate({bottom: -($("#content_info").height() - (3*$("#info_controller").height()))} , 100 , function(){
+            // 지도 조정
+            let mapSize = $(document).height() - $(".header").height();
+            $("#map").animate({height: mapSize} , 50);
+        });
+    });
+
+    $(document).on("keydown" ,"#searchInput" ,function (e){
+        if(e.key == "Enter" || e.keyCode == 13){
+            $(".search > div").click();
+            $("#searchInput").blur();
+        }
+    });
+
+
+</script>
+
+<body style="overflow-x: hidden; overflow-y: hidden">
+    <div class="wrap" style="position:inherit;">
+        <!-- Alert -->
+        <div class="start_modal" id="guest_alert" style="display: none;">
+            <div class="modal_box">
+                <h3>현재 게스트 로그인중입니다</h3>
+                <p>로그인 후 이용 가능합니다</p>
+                <div class="modal_bottom">
+                    <p class="hide_alert">취소</p>
+                    <p class="goto_login">회원가입</p>
+                </div>
+            </div>
+        </div>
+        <!-- Alert -->
+        <!-- Alert -->
+        <div class="start_modal" style="display: none;">
+            <div class="modal_box">
+                <h3><span id="climb_mt_name" style="color: #17C99E; font-weight: bold;"></span> 등산을 시작하시겠습니까?</h3>
+                <p>위치정보제공을 <span style="color:#17C99E">항상</span>으로 변경해주세요.</p>
+                <div class="modal_bottom">
+                    <p class="cancel_climb">아니요</p>
+                    <p class="start_interval">등산하기</p>
+                </div>
+            </div>
+        </div>
+        <!-- Alert -->
+        <section class="main around">
+            <header class="header">
+                <a href="https://santa-community.co.kr/main">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_2_882)">
+                            <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z" fill="#374957"/>
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_2_882">
+                                <rect width="24" height="24" fill="white"/>
+                            </clipPath>
+                        </defs>
+                    </svg>
+                </a>
+                <h2>내 주변</h2>
+                <div></div>
+            </header>
+
+            <div class="my_around" id="map" style="height:100%; z-index: 0;">
+                <div id="searchTxt" class="search" style="z-index:10">
+                    <div>
+                        <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_2_872)">
+                                <path d="M20.5302 19.2995L15.4347 14.204C16.8233 12.5057 17.506 10.3387 17.3417 8.15118C17.1773 5.96365 16.1785 3.92298 14.5517 2.45127C12.9249 0.979551 10.7947 0.189389 8.60174 0.244221C6.40873 0.299053 4.3207 1.19468 2.76952 2.74586C1.21835 4.29703 0.322715 6.38507 0.267883 8.57808C0.213051 10.7711 1.00321 12.9013 2.47493 14.528C3.94665 16.1548 5.98732 17.1536 8.17484 17.318C10.3624 17.4824 12.5294 16.7996 14.2277 15.4111L19.3231 20.5066C19.4841 20.6621 19.6998 20.7481 19.9236 20.7462C20.1474 20.7442 20.3615 20.6544 20.5198 20.4962C20.6781 20.3379 20.7679 20.1238 20.7698 19.8999C20.7718 19.6761 20.6857 19.4605 20.5302 19.2995ZM8.82912 15.6347C7.47842 15.6347 6.15805 15.2342 5.03498 14.4838C3.91191 13.7334 3.03659 12.6668 2.5197 11.4189C2.00281 10.171 1.86756 8.79788 2.13107 7.47313C2.39458 6.14838 3.04501 4.93152 4.0001 3.97643C4.95519 3.02134 6.17205 2.37092 7.4968 2.10741C8.82154 1.8439 10.1947 1.97914 11.4426 2.49604C12.6905 3.01293 13.757 3.88825 14.5075 5.01132C15.2579 6.13439 15.6584 7.45476 15.6584 8.80546C15.6564 10.6161 14.9362 12.3519 13.6559 13.6322C12.3756 14.9125 10.6397 15.6327 8.82912 15.6347Z" fill="white"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_2_872">
+                                    <rect width="20.4878" height="20.4878" fill="white" transform="translate(0.292725 0.26828)"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
+                    </div>
+                    <input type="text" placeholder="검색어를 입력하세요." id="searchInput" style="z-index:1">
+                </div>
+
+                <!--
+                <div class="pin_icon">
+                                    <svg width="25" height="33" viewBox="0 0 25 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M24 12.0496C24 18.6813 12.5 31.6667 12.5 31.6667C12.5 31.6667 1 18.6813 1 12.0496C1 5.41794 6.14625 1 12.5 1C18.8538 1 24 5.34128 24 12.0496Z" fill="#17C99E" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M12.4998 15.3367C14.6169 15.3367 16.3331 13.6204 16.3331 11.5034C16.3331 9.38626 14.6169 7.67002 12.4998 7.67002C10.3827 7.67002 8.66646 9.38626 8.66646 11.5034C8.66646 13.6204 10.3827 15.3367 12.4998 15.3367Z" fill="#17C99E" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                -->
+            </div>
+            <div class="more_info" id="content_info" style="z-index: 1;">
+                <div class="flight_icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.8556 0.853585C19.228 0.784641 19.5388 1.13857 19.4224 1.49893L13.8449 18.7647C13.7165 19.1623 13.1861 19.2363 12.9537 18.8892L8.41456 12.1107C8.28229 11.9132 8.30739 11.6498 8.47459 11.4809L10.2927 9.64341C10.7277 9.20379 10.1342 8.52122 9.63839 8.89088L7.47134 10.5066C7.28051 10.6489 7.01584 10.6369 6.83864 10.478L0.756844 5.02351C0.447851 4.74639 0.591529 4.2352 0.999649 4.15964L18.8556 0.853585Z" fill="#0EBB91"/>
+                    </svg>
+                </div>
+                <span id="info_controller"></span>
+                <div class="more_info_title">
+                    <h3>산타의 추천</h3>
+                </div>
+                <div class="slick_slider" id="slick_rec">
+                    <div class="more_info_box">
+                        <div class="inner_recommend_box">
+                            <div class="more_info_box_left">
+                                <ul>
+                                    <li><h4 class="recommend_name0">로딩중</h4></li>
+                                    <li style="margin-bottom: 2px;">
+                                        <svg width="11" height="10" viewBox="0 0 11 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path class="recommend_likes_btn recommend_likes_btn0" d="M5.55444 8.56917L1.58986 4.51574L1.58987 4.51573L1.5879 4.51373C1.40415 4.32692 1.25622 4.1019 1.15457 3.8509C1.05285 3.59971 1 3.32886 1 3.05456C1 2.78025 1.05285 2.5094 1.15457 2.25821C1.25617 2.00732 1.40402 1.78239 1.58766 1.59562C1.96826 1.20941 2.4715 1 2.98786 1C3.50392 1 4.00698 1.20917 4.38744 1.59483C4.3878 1.59519 4.38816 1.59556 4.38851 1.59592L4.84034 2.05772C5.02938 2.25093 5.28859 2.35938 5.5589 2.35836C5.82921 2.35734 6.08759 2.24693 6.27516 2.05229L6.61514 1.69952C6.99532 1.31541 7.49734 1.10713 8.01231 1.10713C8.52874 1.10713 9.03214 1.31659 9.41269 1.70277C9.59631 1.88931 9.74413 2.114 9.84566 2.36459C9.94723 2.61528 10 2.88577 10 3.1599C10 3.43403 9.94723 3.70452 9.84566 3.9552C9.74413 4.2058 9.59631 4.43049 9.41269 4.61703L9.40981 4.61997L5.55444 8.56917Z" fill="#17C99E" stroke="#17C99E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <p class="recommend_likes0"lo style="margin-top:3.5px;">0</p>
+                                    </li>
+                                </ul>
+                                <p class="recommend_address0">경상남도 창원시 마산합포구 교방동</p>
+                                <div>
+                                    <div>
+                                        <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2_856)">
+                                                <rect width="17" height="16" fill="white"/>
+                                                <path d="M8.50007 4C7.93969 4 7.3919 4.1564 6.92596 4.44941C6.46002 4.74243 6.09686 5.15891 5.88241 5.64618C5.66796 6.13345 5.61185 6.66962 5.72118 7.18691C5.8305 7.70419 6.10035 8.17935 6.4966 8.55229C6.89285 8.92523 7.3977 9.1792 7.94732 9.28209C8.49693 9.38499 9.06662 9.33218 9.58434 9.13035C10.1021 8.92851 10.5446 8.58672 10.8559 8.14819C11.1672 7.70966 11.3334 7.19408 11.3334 6.66667C11.3334 5.95942 11.0349 5.28115 10.5035 4.78105C9.97219 4.28095 9.25152 4 8.50007 4ZM8.50007 8C8.21988 8 7.94598 7.9218 7.71301 7.77529C7.48004 7.62878 7.29847 7.42055 7.19124 7.17691C7.08402 6.93328 7.05596 6.66519 7.11063 6.40655C7.16529 6.14791 7.30021 5.91033 7.49834 5.72386C7.69646 5.53739 7.94889 5.4104 8.22369 5.35895C8.4985 5.30751 8.78334 5.33391 9.04221 5.43483C9.30107 5.53574 9.52232 5.70664 9.67799 5.92591C9.83365 6.14517 9.91674 6.40296 9.91674 6.66667C9.91674 7.02029 9.76748 7.35943 9.50181 7.60948C9.23613 7.85952 8.87579 8 8.50007 8Z" fill="black"/>
+                                                <path d="M8.49995 16.0002C7.90349 16.003 7.31498 15.8714 6.7837 15.6162C6.25242 15.361 5.79383 14.9898 5.44632 14.5335C2.74686 11.0288 1.37766 8.39417 1.37766 6.70217C1.37766 4.92434 2.12804 3.21932 3.46373 1.9622C4.79941 0.705082 6.611 -0.00115967 8.49995 -0.00115967C10.3889 -0.00115967 12.2005 0.705082 13.5362 1.9622C14.8719 3.21932 15.6222 4.92434 15.6222 6.70217C15.6222 8.39417 14.253 11.0288 11.5536 14.5335C11.2061 14.9898 10.7475 15.361 10.2162 15.6162C9.68491 15.8714 9.0964 16.003 8.49995 16.0002ZM8.49995 1.45417C7.02124 1.45576 5.60358 2.00932 4.55798 2.99342C3.51238 3.97752 2.92422 5.31179 2.92253 6.70351C2.92253 8.04351 4.2634 10.5215 6.69724 13.6808C6.90386 13.9487 7.17492 14.1667 7.48824 14.317C7.80157 14.4673 8.14826 14.5457 8.49995 14.5457C8.85163 14.5457 9.19832 14.4673 9.51165 14.317C9.82498 14.1667 10.096 13.9487 10.3027 13.6808C12.7365 10.5215 14.0774 8.04351 14.0774 6.70351C14.0757 5.31179 13.4875 3.97752 12.4419 2.99342C11.3963 2.00932 9.97865 1.45576 8.49995 1.45417Z" fill="black"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2_856">
+                                                    <rect width="17" height="16" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_distance0">0m</p>
+                                    </div>
+                                    <div>
+                                        <svg width="31" height="28" viewBox="0 0 31 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g filter="url(#filter0_d_2_887)">
+                                                <path d="M16.1768 7.32455C16.9734 6.19245 18.6516 6.19245 19.4482 7.32455L26.1501 16.8491C27.0825 18.1742 26.1347 20 24.5144 20H11.1106C9.49033 20 8.54254 18.1742 9.47495 16.8491L16.1768 7.32455Z" fill="white"/>
+                                                <path d="M16.7493 7.72737C17.2671 6.9915 18.3579 6.9915 18.8757 7.72737L25.5776 17.2519C26.1836 18.1132 25.5676 19.3 24.5144 19.3H11.1106C10.0574 19.3 9.44136 18.1132 10.0474 17.2519L16.7493 7.72737Z" stroke="black" stroke-width="1.4"/>
+                                            </g>
+                                            <path d="M10.5565 3.8813C11.036 2.92459 12.4015 2.92459 12.881 3.8813L19.7902 17.6675C20.2235 18.532 19.595 19.55 18.628 19.55H4.80947C3.84255 19.55 3.21403 18.532 3.64727 17.6675L10.5565 3.8813Z" fill="white" stroke="black" stroke-width="1.4"/>
+                                            <defs>
+                                                <filter id="filter0_d_2_887" x="5.10712" y="6.47546" width="25.4108" height="21.5245" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                                                    <feOffset dy="4"/>
+                                                    <feGaussianBlur stdDeviation="2"/>
+                                                    <feComposite in2="hardAlpha" operator="out"/>
+                                                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2_887"/>
+                                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2_887" result="shape"/>
+                                                </filter>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_height0">0m</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="more_info_box_right">
+                                <img class="recommend_image0" src="img/map_bottom_img.png" style="max-width: 129px; max-height: 92px; border-radius: 15px; width: 100vh; height: 100vh;" alt="">
+                            </div>
+                        </div>
+                        <button class="start_climb0 start_climb">등산하기</button>
+                    </div>
+                    <div class="more_info_box">
+                        <div class="inner_recommend_box">
+                            <div class="more_info_box_left">
+                                <ul>
+                                    <li><h4 class="recommend_name1">로딩중</h4></li>
+                                    <li style="margin-bottom: 2px;">
+                                        <svg width="11" height="10" viewBox="0 0 11 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path class="recommend_likes_btn recommend_likes_btn1" d="M5.55444 8.56917L1.58986 4.51574L1.58987 4.51573L1.5879 4.51373C1.40415 4.32692 1.25622 4.1019 1.15457 3.8509C1.05285 3.59971 1 3.32886 1 3.05456C1 2.78025 1.05285 2.5094 1.15457 2.25821C1.25617 2.00732 1.40402 1.78239 1.58766 1.59562C1.96826 1.20941 2.4715 1 2.98786 1C3.50392 1 4.00698 1.20917 4.38744 1.59483C4.3878 1.59519 4.38816 1.59556 4.38851 1.59592L4.84034 2.05772C5.02938 2.25093 5.28859 2.35938 5.5589 2.35836C5.82921 2.35734 6.08759 2.24693 6.27516 2.05229L6.61514 1.69952C6.99532 1.31541 7.49734 1.10713 8.01231 1.10713C8.52874 1.10713 9.03214 1.31659 9.41269 1.70277C9.59631 1.88931 9.74413 2.114 9.84566 2.36459C9.94723 2.61528 10 2.88577 10 3.1599C10 3.43403 9.94723 3.70452 9.84566 3.9552C9.74413 4.2058 9.59631 4.43049 9.41269 4.61703L9.40981 4.61997L5.55444 8.56917Z" fill="#17C99E" stroke="#17C99E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <p class="recommend_likes1" lo style="margin-top:3.5px;">0</p>
+                                    </li>
+                                </ul>
+                                <p class="recommend_address1">경상남도 창원시 마산합포구 교방동</p>
+                                <div>
+                                    <div>
+                                        <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2_856)">
+                                                <rect width="17" height="16" fill="white"/>
+                                                <path d="M8.50007 4C7.93969 4 7.3919 4.1564 6.92596 4.44941C6.46002 4.74243 6.09686 5.15891 5.88241 5.64618C5.66796 6.13345 5.61185 6.66962 5.72118 7.18691C5.8305 7.70419 6.10035 8.17935 6.4966 8.55229C6.89285 8.92523 7.3977 9.1792 7.94732 9.28209C8.49693 9.38499 9.06662 9.33218 9.58434 9.13035C10.1021 8.92851 10.5446 8.58672 10.8559 8.14819C11.1672 7.70966 11.3334 7.19408 11.3334 6.66667C11.3334 5.95942 11.0349 5.28115 10.5035 4.78105C9.97219 4.28095 9.25152 4 8.50007 4ZM8.50007 8C8.21988 8 7.94598 7.9218 7.71301 7.77529C7.48004 7.62878 7.29847 7.42055 7.19124 7.17691C7.08402 6.93328 7.05596 6.66519 7.11063 6.40655C7.16529 6.14791 7.30021 5.91033 7.49834 5.72386C7.69646 5.53739 7.94889 5.4104 8.22369 5.35895C8.4985 5.30751 8.78334 5.33391 9.04221 5.43483C9.30107 5.53574 9.52232 5.70664 9.67799 5.92591C9.83365 6.14517 9.91674 6.40296 9.91674 6.66667C9.91674 7.02029 9.76748 7.35943 9.50181 7.60948C9.23613 7.85952 8.87579 8 8.50007 8Z" fill="black"/>
+                                                <path d="M8.49995 16.0002C7.90349 16.003 7.31498 15.8714 6.7837 15.6162C6.25242 15.361 5.79383 14.9898 5.44632 14.5335C2.74686 11.0288 1.37766 8.39417 1.37766 6.70217C1.37766 4.92434 2.12804 3.21932 3.46373 1.9622C4.79941 0.705082 6.611 -0.00115967 8.49995 -0.00115967C10.3889 -0.00115967 12.2005 0.705082 13.5362 1.9622C14.8719 3.21932 15.6222 4.92434 15.6222 6.70217C15.6222 8.39417 14.253 11.0288 11.5536 14.5335C11.2061 14.9898 10.7475 15.361 10.2162 15.6162C9.68491 15.8714 9.0964 16.003 8.49995 16.0002ZM8.49995 1.45417C7.02124 1.45576 5.60358 2.00932 4.55798 2.99342C3.51238 3.97752 2.92422 5.31179 2.92253 6.70351C2.92253 8.04351 4.2634 10.5215 6.69724 13.6808C6.90386 13.9487 7.17492 14.1667 7.48824 14.317C7.80157 14.4673 8.14826 14.5457 8.49995 14.5457C8.85163 14.5457 9.19832 14.4673 9.51165 14.317C9.82498 14.1667 10.096 13.9487 10.3027 13.6808C12.7365 10.5215 14.0774 8.04351 14.0774 6.70351C14.0757 5.31179 13.4875 3.97752 12.4419 2.99342C11.3963 2.00932 9.97865 1.45576 8.49995 1.45417Z" fill="black"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2_856">
+                                                    <rect width="17" height="16" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_distance1">0m</p>
+                                    </div>
+                                    <div>
+                                        <svg width="31" height="28" viewBox="0 0 31 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g filter="url(#filter0_d_2_887)">
+                                                <path d="M16.1768 7.32455C16.9734 6.19245 18.6516 6.19245 19.4482 7.32455L26.1501 16.8491C27.0825 18.1742 26.1347 20 24.5144 20H11.1106C9.49033 20 8.54254 18.1742 9.47495 16.8491L16.1768 7.32455Z" fill="white"/>
+                                                <path d="M16.7493 7.72737C17.2671 6.9915 18.3579 6.9915 18.8757 7.72737L25.5776 17.2519C26.1836 18.1132 25.5676 19.3 24.5144 19.3H11.1106C10.0574 19.3 9.44136 18.1132 10.0474 17.2519L16.7493 7.72737Z" stroke="black" stroke-width="1.4"/>
+                                            </g>
+                                            <path d="M10.5565 3.8813C11.036 2.92459 12.4015 2.92459 12.881 3.8813L19.7902 17.6675C20.2235 18.532 19.595 19.55 18.628 19.55H4.80947C3.84255 19.55 3.21403 18.532 3.64727 17.6675L10.5565 3.8813Z" fill="white" stroke="black" stroke-width="1.4"/>
+                                            <defs>
+                                                <filter id="filter0_d_2_887" x="5.10712" y="6.47546" width="25.4108" height="21.5245" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                                                    <feOffset dy="4"/>
+                                                    <feGaussianBlur stdDeviation="2"/>
+                                                    <feComposite in2="hardAlpha" operator="out"/>
+                                                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2_887"/>
+                                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2_887" result="shape"/>
+                                                </filter>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_height1">0m</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="more_info_box_right">
+                                <img class="recommend_image1" src="img/map_bottom_img.png" style="max-width: 129px; max-height: 92px; border-radius: 15px; width: 100vh; height: 100vh;" alt="">
+                            </div>
+                        </div>
+                        <button class="start_climb1 start_climb">등산하기</button>
+                    </div>
+                    <div class="more_info_box">
+                        <div class="inner_recommend_box">
+                            <div class="more_info_box_left">
+                                <ul>
+                                    <li><h4 class="recommend_name2">로딩중</h4></li>
+                                    <li style="margin-bottom: 2px;">
+                                        <svg width="11" height="10" viewBox="0 0 11 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path class="recommend_likes_btn recommend_likes_btn2" d="M5.55444 8.56917L1.58986 4.51574L1.58987 4.51573L1.5879 4.51373C1.40415 4.32692 1.25622 4.1019 1.15457 3.8509C1.05285 3.59971 1 3.32886 1 3.05456C1 2.78025 1.05285 2.5094 1.15457 2.25821C1.25617 2.00732 1.40402 1.78239 1.58766 1.59562C1.96826 1.20941 2.4715 1 2.98786 1C3.50392 1 4.00698 1.20917 4.38744 1.59483C4.3878 1.59519 4.38816 1.59556 4.38851 1.59592L4.84034 2.05772C5.02938 2.25093 5.28859 2.35938 5.5589 2.35836C5.82921 2.35734 6.08759 2.24693 6.27516 2.05229L6.61514 1.69952C6.99532 1.31541 7.49734 1.10713 8.01231 1.10713C8.52874 1.10713 9.03214 1.31659 9.41269 1.70277C9.59631 1.88931 9.74413 2.114 9.84566 2.36459C9.94723 2.61528 10 2.88577 10 3.1599C10 3.43403 9.94723 3.70452 9.84566 3.9552C9.74413 4.2058 9.59631 4.43049 9.41269 4.61703L9.40981 4.61997L5.55444 8.56917Z" fill="#17C99E" stroke="#17C99E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <p class="recommend_likes2" lo style="margin-top:3.5px;">1,000</p>
+                                    </li>
+                                </ul>
+                                <p class="recommend_address2">경상남도 창원시 마산합포구 교방동</p>
+                                <div>
+                                    <div>
+                                        <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_2_856)">
+                                                <rect width="17" height="16" fill="white"/>
+                                                <path d="M8.50007 4C7.93969 4 7.3919 4.1564 6.92596 4.44941C6.46002 4.74243 6.09686 5.15891 5.88241 5.64618C5.66796 6.13345 5.61185 6.66962 5.72118 7.18691C5.8305 7.70419 6.10035 8.17935 6.4966 8.55229C6.89285 8.92523 7.3977 9.1792 7.94732 9.28209C8.49693 9.38499 9.06662 9.33218 9.58434 9.13035C10.1021 8.92851 10.5446 8.58672 10.8559 8.14819C11.1672 7.70966 11.3334 7.19408 11.3334 6.66667C11.3334 5.95942 11.0349 5.28115 10.5035 4.78105C9.97219 4.28095 9.25152 4 8.50007 4ZM8.50007 8C8.21988 8 7.94598 7.9218 7.71301 7.77529C7.48004 7.62878 7.29847 7.42055 7.19124 7.17691C7.08402 6.93328 7.05596 6.66519 7.11063 6.40655C7.16529 6.14791 7.30021 5.91033 7.49834 5.72386C7.69646 5.53739 7.94889 5.4104 8.22369 5.35895C8.4985 5.30751 8.78334 5.33391 9.04221 5.43483C9.30107 5.53574 9.52232 5.70664 9.67799 5.92591C9.83365 6.14517 9.91674 6.40296 9.91674 6.66667C9.91674 7.02029 9.76748 7.35943 9.50181 7.60948C9.23613 7.85952 8.87579 8 8.50007 8Z" fill="black"/>
+                                                <path d="M8.49995 16.0002C7.90349 16.003 7.31498 15.8714 6.7837 15.6162C6.25242 15.361 5.79383 14.9898 5.44632 14.5335C2.74686 11.0288 1.37766 8.39417 1.37766 6.70217C1.37766 4.92434 2.12804 3.21932 3.46373 1.9622C4.79941 0.705082 6.611 -0.00115967 8.49995 -0.00115967C10.3889 -0.00115967 12.2005 0.705082 13.5362 1.9622C14.8719 3.21932 15.6222 4.92434 15.6222 6.70217C15.6222 8.39417 14.253 11.0288 11.5536 14.5335C11.2061 14.9898 10.7475 15.361 10.2162 15.6162C9.68491 15.8714 9.0964 16.003 8.49995 16.0002ZM8.49995 1.45417C7.02124 1.45576 5.60358 2.00932 4.55798 2.99342C3.51238 3.97752 2.92422 5.31179 2.92253 6.70351C2.92253 8.04351 4.2634 10.5215 6.69724 13.6808C6.90386 13.9487 7.17492 14.1667 7.48824 14.317C7.80157 14.4673 8.14826 14.5457 8.49995 14.5457C8.85163 14.5457 9.19832 14.4673 9.51165 14.317C9.82498 14.1667 10.096 13.9487 10.3027 13.6808C12.7365 10.5215 14.0774 8.04351 14.0774 6.70351C14.0757 5.31179 13.4875 3.97752 12.4419 2.99342C11.3963 2.00932 9.97865 1.45576 8.49995 1.45417Z" fill="black"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2_856">
+                                                    <rect width="17" height="16" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_distance2">0m</p>
+                                    </div>
+                                    <div>
+                                        <svg width="31" height="28" viewBox="0 0 31 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g filter="url(#filter0_d_2_887)">
+                                                <path d="M16.1768 7.32455C16.9734 6.19245 18.6516 6.19245 19.4482 7.32455L26.1501 16.8491C27.0825 18.1742 26.1347 20 24.5144 20H11.1106C9.49033 20 8.54254 18.1742 9.47495 16.8491L16.1768 7.32455Z" fill="white"/>
+                                                <path d="M16.7493 7.72737C17.2671 6.9915 18.3579 6.9915 18.8757 7.72737L25.5776 17.2519C26.1836 18.1132 25.5676 19.3 24.5144 19.3H11.1106C10.0574 19.3 9.44136 18.1132 10.0474 17.2519L16.7493 7.72737Z" stroke="black" stroke-width="1.4"/>
+                                            </g>
+                                            <path d="M10.5565 3.8813C11.036 2.92459 12.4015 2.92459 12.881 3.8813L19.7902 17.6675C20.2235 18.532 19.595 19.55 18.628 19.55H4.80947C3.84255 19.55 3.21403 18.532 3.64727 17.6675L10.5565 3.8813Z" fill="white" stroke="black" stroke-width="1.4"/>
+                                            <defs>
+                                                <filter id="filter0_d_2_887" x="5.10712" y="6.47546" width="25.4108" height="21.5245" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                                                    <feOffset dy="4"/>
+                                                    <feGaussianBlur stdDeviation="2"/>
+                                                    <feComposite in2="hardAlpha" operator="out"/>
+                                                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2_887"/>
+                                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2_887" result="shape"/>
+                                                </filter>
+                                            </defs>
+                                        </svg>
+                                        <p class="recommend_height2">0m</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="more_info_box_right">
+                                <img class="recommend_image2" src="img/map_bottom_img.png" style="max-width: 129px; max-height: 92px; border-radius: 15px; width: 100vh; height: 100vh;" alt="">
+                            </div>
+                        </div>
+                        <button class="start_climb2 start_climb">등산하기</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+    </div>
+</body>
+
+<script th:inline="javascript">
+    $(function(){
+
+        $('.slick_slider').slick({
+            dots: true,
+        });
+
+        $(".more_info").css('bottom', '0');
+        /*
+
+        $(".pin_icon").click(function(){
+            $(".more_info").css('bottom', '0');
+        });
+
+        $(".my_around").mouseup(function(){
+            $(".more_info").css('bottom', '-270px');
+        });
+
+        $(".search > div").click(function(){
+            $(".search > input").toggleClass('active');
+        });
+*/
+
+
+    });
+</script>
+
+</html>

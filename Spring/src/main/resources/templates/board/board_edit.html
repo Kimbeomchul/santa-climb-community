@@ -1,0 +1,188 @@
+<!doctype html>
+
+<html xmlns:th="http://www.thymleaf.org">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <script type="text/javascript" src="/js/santaUtil.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <link rel="stylesheet" href="/css/font.css" type="text/css">
+  <link rel="stylesheet" href="/css/css.css" type="text/css">
+</head>
+<body style="background-color: white">
+
+  <header class="header">
+    <a href="https://santa-community.co.kr/board/list">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clip-path="url(#clip0_2_882)">
+          <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z" fill="#374957"/>
+        </g>
+        <defs>
+          <clipPath id="clip0_2_882">
+            <rect width="24" height="24" fill="white"/>
+          </clipPath>
+        </defs>
+      </svg>
+    </a>
+    <h2 style="font-weight: bold; margin-top:1px;">글수정</h2>
+  </header>
+
+
+  <form method="post" th:action="|/board/edit/${board.boardNum}|" id="board_write" style="font-size: .8rem;
+      border-radius: 10rem;
+      padding: 1.5rem 1rem;">
+    <h6>제목</h6>
+    <div class="form-group mb-3">
+      <input type="text" class="form-control form-control-user" id="title" name="title" th:value="${board.title}"
+             placeholder="제목을 입력하세요." maxlength="20">
+    </div>
+
+    <h6>이미지</h6>
+    <div class="form-group mb-3">
+      <input type="file" class="form-control form-control-user" id="img" accept="image/png ,image/jpg ,image/jpeg ,image/svg+xml">
+      <input type="hidden" id="image_url" name="boardImage" th:value="${board.boardImage}">
+    </div>
+
+    <h6>해시태그</h6>
+    <div class="form-group mb-3">
+      <input type="hidden" value="" name="tag" id="rdTag" />
+      <input type="text" class="form-control form-control-user" id="tag"
+             placeholder="태그는 수정하실 수 없습니다." disabled>
+
+      <input type="hidden" value="" name="tag1" id="tag1" th:value="${board.tag1}"/>
+      <input type="hidden" value="" name="tag2" id="tag2" th:value="${board.tag2}"/>
+      <input type="hidden" value="" name="tag3" id="tag3" th:value="${board.tag3}"/>
+      <ul id="tag-list">
+        <!-- 태그들이 들어감 -->
+      </ul>
+    </div>
+    <h6>내용</h6>
+    <div class="form-group mb-3">
+      <textarea class="form-control" rows="10" name="content" id="content" placeholder="내용을 입력하세요" th:value="${board.content}" th:text="${board.content}" maxlength="100"></textarea>
+    </div>
+
+    <div class="button-wrapper">
+      <button class="button" id="nextserve">등록</button>
+    </div>
+  </form>
+</body>
+
+<style>
+  ul {
+    padding: 16px 0;
+  }
+
+  ul li {
+    display: inline-block;
+    margin: 0 5px;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: -.5px;
+  }
+
+  ul li.tag-item {
+    padding: 4px 8px;
+    border-radius: 15px;
+    border: 1.5px solid #0EBB91;
+    color: #000;
+  }
+
+  .tag-item:hover {
+    background-color: #0EBB91;
+    border-color: whitesmoke;
+    color: white;
+  }
+
+  .del-btn {
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    padding-bottom: 3px;
+    margin-left: 8px;
+  }
+
+</style>
+
+<script th:inline="javascript">
+
+
+  $(function(){
+    let tag1 = "[(${board.tag1})]";
+    let tag2 = "[(${board.tag2})]";
+    let tag3 = "[(${board.tag3})]";
+
+
+    if(tag1) $("#tag-list").append("<li class='tag-item' value='1'>"+ tag1 +"<span class='del-btn'></span></li>");
+    if(tag2) $("#tag-list").append("<li class='tag-item' value='2'>"+ tag2 +"<span class='del-btn'></span></li>");
+    if(tag3) $("#tag-list").append("<li class='tag-item' value='3'>"+ tag3 +"<span class='del-btn'></span></li>");
+  });
+
+
+
+
+  $("#nextserve").on("click",function (){
+    let images = document.getElementById("img").value;
+    if(!overClick()) {
+      // 사진이있다면
+      if (images) {
+        downsizeImage();
+      }
+      $("#board_write").submit();
+    }
+  });
+
+  function uploadImage(resizedImage) {
+    if(!resizedImage) return;
+    let formData = new FormData();
+    formData.append('data', resizedImage);
+    let imageurl;
+    $.ajax({
+      type: 'POST',
+      url: '/upload',
+      data: formData,
+      processData: false,
+      contentType: false,
+      async: false
+    }).done(function (data) {
+      imageurl = data;
+    }).fail(function (error) {
+
+    });
+    return imageurl;
+  }
+
+  // 파일이미지 용량줄이기
+  function downsizeImage(){
+    let f = $('#img')[0].files[0];
+    let fileName = f.name;
+    let img = new Image();
+    img.src = URL.createObjectURL(f);
+    img.onload = function(){
+      let canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function(blob){
+        // 줄인 용량이 9M 이상일경우 무시
+        let MaxSize = 9 * 1024 * 1024; // 9M
+        if(blob.size > MaxSize){
+          Print.postMessage('파일용량은 9M를 초과할 수 없습니다');
+          $('#img').val("");
+          return;
+        }
+        let f2 = new File([blob], fileName);
+        // 이미지 업로드처리
+        let resizedUrl = uploadImage(f2);
+        $("#image_url").val(resizedUrl);
+        $("#board_write").submit();
+      }, 'image/jpeg', 0.5);
+    }
+  }
+
+
+</script>
+</html>

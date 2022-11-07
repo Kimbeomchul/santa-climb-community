@@ -1,0 +1,78 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.7'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'com.mozzi'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+bootJar{
+	archivesBaseName = 'santa'
+	archiveFileName = 'santa.jar'
+	archiveVersion = "0.0.1"
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://repo.spring.io/libs-milestone'}
+}
+
+dependencies {
+
+	// Thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// default web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// json
+	implementation 'org.json:json:20171018'
+
+	// mysql 및 mybatis 사용 의존성.
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.0'
+	runtimeOnly 'mysql:mysql-connector-java:8.0.25'
+
+	// test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// 웹소켓
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.webjars:sockjs-client:1.1.2'
+	implementation 'org.webjars:stomp-websocket:2.3.3-1'
+
+	implementation 'org.webjars.bower:vue:2.5.16'
+	implementation 'org.webjars.bower:axios:0.17.1'
+
+	// bucket
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-aws', version: '2.2.6.RELEASE'
+
+	// XSS 검증 - naver lucy xss servlet filter
+	implementation 'com.navercorp.lucy:lucy-xss-servlet:2.0.1'
+	implementation 'com.navercorp.lucy:lucy-xss:1.6.3'
+
+	//StringEscapeUtils 를 사용하기 위해 commons-text 의존성 추가
+	implementation 'org.apache.commons:commons-text:1.9'
+
+	// 파일 확장자 검증 아파치 tika
+	implementation("org.apache.tika:tika-parsers:1.18")
+	implementation("net.sf.jmimemagic:jmimemagic:0.1.5")
+	implementation("com.j256.simplemagic:simplemagic:1.16")
+
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

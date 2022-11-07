@@ -1,0 +1,273 @@
+<!doctype html>
+
+<html xmlns:th="http://www.thymleaf.org">
+<script type="text/javascript" src="/js/santaUtil.min.js"></script>
+<div th:replace="~{fragment/header :: linkHead}"></div>
+<link rel="stylesheet" href="/css/chat.css" type="text/css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.4/lottie.min.js"></script>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+<style>
+    p {
+        margin-bottom: 0rem;
+    }
+</style>
+
+<body>
+<!-- 로딩바 -->
+<div class="wrapper" style="display: none;">
+    <div id="myGIF"></div>
+</div>
+<!-- 로딩바 -->
+
+    <div class="wrap">
+        <!-- 산타러 모달 -->
+        <div class="modal fade" tabindex="-1" role="dialog" id="user_follow">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+
+                    <div class="d-flex justify-content-between mt-2 ml-3 mr-3">
+                        <h6 class="modal-title" style="padding-top: 7px; padding-left: 5px">산타러</h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body follower_list user_follow_content" style="overflow:scroll ; max-height: 50vh; " th:each="follower : ${follower}" >
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="img_cont_msg" style=" padding-left: 10px;">
+                                <img th:src="${follower.memberImage}" src="http://k.kakaocdn.net/dn/S1v70/btryd3dhcGW/4Wkj94wb1kNy1LRoBBm4xK/img_640x640.jpg" class="rounded-circle user_img_msg" style="width: 50px; height:50px;" th:id="${follower.following}">
+                            </div>
+                            <div class="msg_cotainer" style="background: #ffffff;" th:text="${follower.nickname}">
+                                닉네임
+                            </div>
+                            <div class="msg_cotainer" style="background: #ffffff;"></div>
+                            <div th:value="${follower.following}" th:classappend="${follower.following}" class="msg_cotainer follow_btn active" style="background: #17C99E; padding-left:25px; padding-right:25px; font-weight:bold; font-size:13px; color:white">
+                                팔로잉
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-body following_list" style="overflow:scroll ; max-height: 50vh; display: none;" th:each="following : ${following}" >
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="img_cont_msg" style=" padding-left: 10px;">
+                                <img th:src="${following.memberImage}" src="http://k.kakaocdn.net/dn/S1v70/btryd3dhcGW/4Wkj94wb1kNy1LRoBBm4xK/img_640x640.jpg" class="rounded-circle user_img_msg" style="width: 50px; height:50px;" th:id="${following.follower}">
+                            </div>
+                            <div class="msg_cotainer" style="background: #ffffff;" th:text="${following.nickname}">
+                                닉네임
+                            </div>
+                            <div class="msg_cotainer" style="background: #ffffff;"></div>
+                            <div class="msg_cotainer follow_btn active" th:classappend="${following.follower}" th:value="${following.follower}" style="background: #17C99E; padding-left:25px; padding-right:25px; font-weight:bold; font-size:13px; color:white">
+                                팔로잉
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <section class="main profile_my">
+            <!-- Alert -->
+            <div class="start_modal" id="logout_alert" style="display: none;">
+                <div class="modal_box">
+                    <h3>정말 로그아웃 하시겠습니까?</h3>
+                    <p></p>
+                    <div class="modal_bottom">
+                        <p class="hide_alert">취소</p>
+                        <p class="logout_submit">로그아웃</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Alert -->
+
+            <!-- header -->
+            <div th:replace="~{fragment/header :: header ('logo')}"></div>
+
+
+            <div class="profile_box">
+                <div class="profile_info">
+                    <p id="profile_board"><span th:text="${member.boardCnt}">0</span><br>게시글</p>
+                    <div>
+                        <div class="profile_img" id="my_profile_image">
+                            <img style="width: 100%" th:src="${member.memberImage}" src="/img/circle_img.png" alt="">
+                        </div>
+                        <p th:text="${member.nickname}">김맴맴양</p>
+                        <button th:value="${member.socialId}" id="edit_profile">프로필 수정</button>
+                        <span id="member_grade" th:text="${member.grade}" style="font-weight: 700; padding-left: 5px">등린등린</span>
+                    </div>
+                    <p id="profile_follow"><span th:text="${member.followCnt}">0</span><br>산타러</p>
+                </div>
+                <div class="profile_content">
+                    <ul class="not_guest" th:onclick="location.href='https://santa-community.co.kr/mt/climb/reward'">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11.8083 4.16667L15.8333 8.19167V15.8333H4.16667V4.16667H11.8083ZM11.8083 2.5H4.16667C3.25 2.5 2.5 3.25 2.5 4.16667V15.8333C2.5 16.75 3.25 17.5 4.16667 17.5H15.8333C16.75 17.5 17.5 16.75 17.5 15.8333V8.19167C17.5 7.75 17.325 7.325 17.0083 7.01667L12.9833 2.99167C12.675 2.675 12.25 2.5 11.8083 2.5ZM5.83333 12.5H14.1667V14.1667H5.83333V12.5ZM5.83333 9.16667H14.1667V10.8333H5.83333V9.16667ZM5.83333 5.83333H11.6667V7.5H5.83333V5.83333Z" fill="#323232"/>
+                            </svg>
+                            <p>등산기록</p>
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7.75828 5.59166C7.43328 5.91666 7.43328 6.44166 7.75828 6.76666L10.9916 10L7.75828 13.2333C7.43328 13.5583 7.43328 14.0833 7.75828 14.4083C8.08328 14.7333 8.60828 14.7333 8.93328 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73333 12.7583 9.40833L8.93328 5.58333C8.61661 5.26666 8.08328 5.26666 7.75828 5.59166Z" fill="#C6C6C6"/>
+                            </svg>
+                        </li>
+                    </ul>
+                    <ul id="developer">
+                        <li>
+                            <svg width="24" height="24" viewBox="0 0 29 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12.026 2C7.13295 1.99937 2.96183 5.54799 2.17842 10.3779C1.395 15.2079 4.23061 19.893 8.87302 21.439C9.37302 21.529 9.55202 21.222 9.55202 20.958C9.55202 20.721 9.54402 20.093 9.54102 19.258C6.76602 19.858 6.18002 17.92 6.18002 17.92C5.99733 17.317 5.60459 16.7993 5.07302 16.461C4.17302 15.842 5.14202 15.856 5.14202 15.856C5.78269 15.9438 6.34657 16.3235 6.66902 16.884C6.94195 17.3803 7.40177 17.747 7.94632 17.9026C8.49087 18.0583 9.07503 17.99 9.56902 17.713C9.61544 17.207 9.84055 16.7341 10.204 16.379C7.99002 16.128 5.66202 15.272 5.66202 11.449C5.64973 10.4602 6.01691 9.5043 6.68802 8.778C6.38437 7.91731 6.42013 6.97325 6.78802 6.138C6.78802 6.138 7.62502 5.869 9.53002 7.159C11.1639 6.71101 12.8882 6.71101 14.522 7.159C16.428 5.868 17.264 6.138 17.264 6.138C17.6336 6.97286 17.6694 7.91757 17.364 8.778C18.0376 9.50423 18.4045 10.4626 18.388 11.453C18.388 15.286 16.058 16.128 13.836 16.375C14.3153 16.8651 14.5612 17.5373 14.511 18.221C14.511 19.555 14.499 20.631 14.499 20.958C14.499 21.225 14.677 21.535 15.186 21.437C19.8265 19.8884 22.6591 15.203 21.874 10.3743C21.089 5.54565 16.9181 1.99888 12.026 2Z" fill="#2E3A59"/>
+                            </svg>
+
+                            <p style="margin-left:25px">개발자</p>
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.75828 5.59166C7.43328 5.91666 7.43328 6.44166 7.75828 6.76666L10.9916 10L7.75828 13.2333C7.43328 13.5583 7.43328 14.0833 7.75828 14.4083C8.08328 14.7333 8.60828 14.7333 8.93328 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73333 12.7583 9.40833L8.93328 5.58333C8.61661 5.26666 8.08328 5.26666 7.75828 5.59166Z" fill="#C6C6C6"/>
+                            </svg>
+                        </li>
+                    </ul>
+                    <ul class="not_guest" id="bug_report">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9.5 0.849992C5.51667 1.10833 2.5 4.59999 2.5 8.59166V14.1667C2.5 15.55 3.61667 16.6667 5 16.6667H5.83333C6.75 16.6667 7.5 15.9167 7.5 15V11.6667C7.5 10.75 6.75 9.99999 5.83333 9.99999H4.16667V8.57499C4.16667 5.37499 6.63333 2.59166 9.825 2.49999C13.1333 2.40833 15.8333 5.04999 15.8333 8.33333V9.99999H14.1667C13.25 9.99999 12.5 10.75 12.5 11.6667V15C12.5 15.9167 13.25 16.6667 14.1667 16.6667H15.8333V17.5H10.8333C10.375 17.5 10 17.875 10 18.3333C10 18.7917 10.375 19.1667 10.8333 19.1667H15C16.3833 19.1667 17.5 18.05 17.5 16.6667V8.33333C17.5 4.02499 13.8667 0.566659 9.5 0.849992Z" fill="#323232"/>
+                            </svg>
+                            <p>오류문의</p>
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.75828 5.59166C7.43328 5.91666 7.43328 6.44166 7.75828 6.76666L10.9916 10L7.75828 13.2333C7.43328 13.5583 7.43328 14.0833 7.75828 14.4083C8.08328 14.7333 8.60828 14.7333 8.93328 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73333 12.7583 9.40833L8.93328 5.58333C8.61661 5.26666 8.08328 5.26666 7.75828 5.59166Z" fill="#C6C6C6"/>
+                            </svg>
+                        </li>
+                    </ul>
+                    <ul class="not_guest" th:onclick="location.href='https://santa-community.co.kr/setting'">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.1917 10.8166C16.225 10.55 16.25 10.2833 16.25 9.99996C16.25 9.71663 16.225 9.44996 16.1917 9.18329L17.95 7.80829C18.1083 7.68329 18.15 7.45829 18.05 7.27496L16.3833 4.39163C16.3083 4.25829 16.1667 4.18329 16.0167 4.18329C15.9667 4.18329 15.9167 4.19163 15.875 4.20829L13.8 5.04163C13.3667 4.70829 12.9 4.43329 12.3917 4.22496L12.075 2.01663C12.05 1.81663 11.875 1.66663 11.6667 1.66663H8.33332C8.12499 1.66663 7.94999 1.81663 7.92499 2.01663L7.60832 4.22496C7.09999 4.43329 6.63332 4.71663 6.19999 5.04163L4.12499 4.20829C4.07499 4.19163 4.02499 4.18329 3.97499 4.18329C3.83332 4.18329 3.69166 4.25829 3.61666 4.39163L1.94999 7.27496C1.84165 7.45829 1.89165 7.68329 2.04999 7.80829L3.80832 9.18329C3.77499 9.44996 3.74999 9.72496 3.74999 9.99996C3.74999 10.275 3.77499 10.55 3.80832 10.8166L2.04999 12.1916C1.89165 12.3166 1.84999 12.5416 1.94999 12.725L3.61666 15.6083C3.69166 15.7416 3.83332 15.8166 3.98332 15.8166C4.03332 15.8166 4.08332 15.8083 4.12499 15.7916L6.19999 14.9583C6.63332 15.2916 7.09999 15.5666 7.60832 15.775L7.92499 17.9833C7.94999 18.1833 8.12499 18.3333 8.33332 18.3333H11.6667C11.875 18.3333 12.05 18.1833 12.075 17.9833L12.3917 15.775C12.9 15.5666 13.3667 15.2833 13.8 14.9583L15.875 15.7916C15.925 15.8083 15.975 15.8166 16.025 15.8166C16.1667 15.8166 16.3083 15.7416 16.3833 15.6083L18.05 12.725C18.15 12.5416 18.1083 12.3166 17.95 12.1916L16.1917 10.8166ZM14.5417 9.39163C14.575 9.64996 14.5833 9.82496 14.5833 9.99996C14.5833 10.175 14.5667 10.3583 14.5417 10.6083L14.425 11.55L15.1667 12.1333L16.0667 12.8333L15.4833 13.8416L14.425 13.4166L13.5583 13.0666L12.8083 13.6333C12.45 13.9 12.1083 14.1 11.7667 14.2416L10.8833 14.6L10.75 15.5416L10.5833 16.6666H9.41666L9.25832 15.5416L9.12499 14.6L8.24165 14.2416C7.88332 14.0916 7.54999 13.9 7.21665 13.65L6.45832 13.0666L5.57499 13.425L4.51665 13.85L3.93332 12.8416L4.83332 12.1416L5.57499 11.5583L5.45832 10.6166C5.43332 10.3583 5.41665 10.1666 5.41665 9.99996C5.41665 9.83329 5.43332 9.64163 5.45832 9.39163L5.57499 8.44996L4.83332 7.86663L3.93332 7.16663L4.51665 6.15829L5.57499 6.58329L6.44165 6.93329L7.19165 6.36663C7.54999 6.09996 7.89165 5.89996 8.23332 5.75829L9.11665 5.39996L9.24999 4.45829L9.41666 3.33329H10.575L10.7333 4.45829L10.8667 5.39996L11.75 5.75829C12.1083 5.90829 12.4417 6.09996 12.775 6.34996L13.5333 6.93329L14.4167 6.57496L15.475 6.14996L16.0583 7.15829L15.1667 7.86663L14.425 8.44996L14.5417 9.39163ZM9.99999 6.66663C8.15832 6.66663 6.66665 8.15829 6.66665 9.99996C6.66665 11.8416 8.15832 13.3333 9.99999 13.3333C11.8417 13.3333 13.3333 11.8416 13.3333 9.99996C13.3333 8.15829 11.8417 6.66663 9.99999 6.66663ZM9.99999 11.6666C9.08332 11.6666 8.33332 10.9166 8.33332 9.99996C8.33332 9.08329 9.08332 8.33329 9.99999 8.33329C10.9167 8.33329 11.6667 9.08329 11.6667 9.99996C11.6667 10.9166 10.9167 11.6666 9.99999 11.6666Z" fill="#323232"/>
+                            </svg>
+                            <p>설정</p>
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.75828 5.59166C7.43328 5.91666 7.43328 6.44166 7.75828 6.76666L10.9916 10L7.75828 13.2333C7.43328 13.5583 7.43328 14.0833 7.75828 14.4083C8.08328 14.7333 8.60828 14.7333 8.93328 14.4083L12.7583 10.5833C13.0833 10.2583 13.0833 9.73333 12.7583 9.40833L8.93328 5.58333C8.61661 5.26666 8.08328 5.26666 7.75828 5.59166Z" fill="#C6C6C6"/>
+                            </svg>
+                        </li>
+                    </ul>
+                    <ul id="logout">
+                        <form action="/logout" method="POST" id="logoutForm">
+                            <li>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M17.4697 13.4697C17.1768 13.7626 17.1768 14.2374 17.4697 14.5303C17.7626 14.8232 18.2374 14.8232 18.5303 14.5303L17.4697 13.4697ZM18.5303 9.46967C18.2374 9.17678 17.7626 9.17678 17.4697 9.46967C17.1768 9.76256 17.1768 10.2374 17.4697 10.5303L18.5303 9.46967ZM18.5303 14.5303L19.8232 13.2374L18.7626 12.1768L17.4697 13.4697L18.5303 14.5303ZM19.8232 10.7626L18.5303 9.46967L17.4697 10.5303L18.7626 11.8232L19.8232 10.7626ZM19.8232 13.2374C20.5066 12.554 20.5066 11.446 19.8232 10.7626L18.7626 11.8232C18.8602 11.9209 18.8602 12.0791 18.7626 12.1768L19.8232 13.2374Z" fill="#28303F"/>
+                                    <path d="M19 12.75C19.4142 12.75 19.75 12.4142 19.75 12C19.75 11.5858 19.4142 11.25 19 11.25V12.75ZM13 11.25C12.5858 11.25 12.25 11.5858 12.25 12C12.25 12.4142 12.5858 12.75 13 12.75V11.25ZM3.25 17.2663C3.25 17.6805 3.58579 18.0163 4 18.0163C4.41421 18.0163 4.75 17.6805 4.75 17.2663H3.25ZM16.75 17.2663C16.75 16.8521 16.4142 16.5163 16 16.5163C15.5858 16.5163 15.25 16.8521 15.25 17.2663H16.75ZM15.25 7.26633C15.25 7.68054 15.5858 8.01633 16 8.01633C16.4142 8.01633 16.75 7.68054 16.75 7.26633H15.25ZM4.75 7.26633C4.75 6.85212 4.41421 6.51633 4 6.51633C3.58579 6.51633 3.25 6.85212 3.25 7.26633H4.75ZM4.8906 19.8601L5.30662 19.236L4.8906 19.8601ZM6.8906 21.1934L6.47458 21.8174L6.8906 21.1934ZM6.8906 3.33926L6.47458 2.71522L6.8906 3.33926ZM4.8906 4.6726L4.47457 4.04856L4.8906 4.6726ZM10 4.51633C9.58579 4.51633 9.25 4.85212 9.25 5.26633C9.25 5.68054 9.58579 6.01633 10 6.01633V4.51633ZM10 18.5163C9.58579 18.5163 9.25 18.8521 9.25 19.2663C9.25 19.6805 9.58579 20.0163 10 20.0163V18.5163ZM19 11.25L13 11.25V12.75L19 12.75V11.25ZM4.75 17.2663V7.26633H3.25V17.2663H4.75ZM15.25 17.2663C15.25 17.9567 14.6904 18.5163 14 18.5163V20.0163C15.5188 20.0163 16.75 18.7851 16.75 17.2663H15.25ZM14 6.01633C14.6904 6.01633 15.25 6.57597 15.25 7.26633H16.75C16.75 5.74755 15.5188 4.51633 14 4.51633V6.01633ZM5.30662 5.29663L7.30663 3.9633L6.47458 2.71522L4.47457 4.04856L5.30662 5.29663ZM9.25 5.00336V19.5293H10.75V5.00336H9.25ZM7.30663 20.5694L5.30662 19.236L4.47457 20.4841L6.47458 21.8174L7.30663 20.5694ZM4.75 18.196V6.3367H3.25V18.196H4.75ZM5.30662 19.236C4.95888 19.0042 4.75 18.6139 4.75 18.196H3.25C3.25 19.1154 3.70953 19.9741 4.47457 20.4841L5.30662 19.236ZM9.25 19.5293C9.25 20.5277 8.13732 21.1232 7.30663 20.5694L6.47458 21.8174C8.3021 23.0358 10.75 21.7257 10.75 19.5293H9.25ZM7.30663 3.9633C8.13732 3.4095 9.25 4.00499 9.25 5.00336H10.75C10.75 2.80695 8.3021 1.49687 6.47458 2.71522L7.30663 3.9633ZM4.47457 4.04856C3.70953 4.55859 3.25 5.41723 3.25 6.3367H4.75C4.75 5.91876 4.95888 5.52847 5.30662 5.29663L4.47457 4.04856ZM10 6.01633H14V4.51633H10V6.01633ZM14 18.5163H10V20.0163H14V18.5163Z" fill="#28303F"/>
+                                </svg>
+                                <p>로그아웃</p>
+                            </li>
+                        </form>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <div th:replace="~{fragment/footer :: bottom_navigation_bar ('profile')}"></div>
+    </div>
+
+    <script>
+        $(function(){
+
+            // FLUTTER 연동
+            $("#developer").on("click", function () {
+                Print.postMessage("developer");
+            });
+
+            let loginUsers = "[(${loginUsers})]";
+
+            $("#bug_report").on("click",function() {
+                location.href = "https://santa-community.co.kr/bug/report";
+            });
+
+            //현재 로그인한 유저찾기
+            for (let user in loginUsers){
+                let findUser = $("#"+user);
+                // 유저가 접속중이면
+                if(findUser) findUser.css("border","3px solid #17C99E");
+            }
+
+            let followList = $(".user_follow_content").length;
+            $("#profile_follow").on("click",function(){
+                if(followList > 0){
+                    $("#user_follow").modal("show");
+                }
+            });
+
+            // 팔로우 버튼
+            $(".follow_btn").on("click",function(){
+                let btnSocialId = $(this).attr("value");
+                $.ajax({
+                    type: "POST",
+                    url: "https://santa-community.co.kr/follow/" + btnSocialId  ,
+                    success: function (result) {
+                        if (result == 1) {
+                            $(".follow_btn").toggleClass("active");
+                            if($(".follow_btn").hasClass("active")){
+                                $("." + btnSocialId).css("background","#17C99E");
+                                $("." + btnSocialId).css("color","white");
+                                $("." + btnSocialId).text("팔로잉");
+                            }else{
+                                $("." + btnSocialId).css("border","2px solid rgba(3, 193, 147, 0.2)");
+                                $("." + btnSocialId).css("background","transparent");
+                                $("." + btnSocialId).css("color","rgba(4, 4, 4, 0.6)");
+                                $("." + btnSocialId).text("팔로우");
+                            }
+                        }
+                        if (result == -1){
+                            console.log("자기 자신을 팔로우 시도함");
+                        }
+                    },
+                    error: function (err) {
+                        console.log("팔로우 에러 = {}", err);
+                    }
+                });
+            });
+
+        });
+
+        $("#profile_board").on("click",function (){
+            let socialId = "[(${member.socialId})]";
+            let writer = "[(${member.nickname})]";
+            location.href = "https://santa-community.co.kr/board/search/profile/" + socialId +"/"+ writer;
+        });
+
+        $(".hide_alert").on("click",function (){
+            $("#logout_alert").fadeOut(200);
+        });
+
+        $("#logout").on("click",function(){
+            $("#logout_alert").fadeIn(200);
+
+            $(".logout_submit").click(function(){
+                $("#logoutForm").submit();
+            });
+        });
+
+        $("#edit_profile").on("click",function(){
+            let mySocialId = $(this).attr("value");
+            location.href = "https://santa-community.co.kr/profile/edit/" + mySocialId;
+        });
+
+        // event
+        let eventMessage = 0;
+
+        document.getElementById("my_profile_image").addEventListener('click', function (evt) {
+            eventMessage += evt.detail;
+            console.log(eventMessage);
+            if(eventMessage == 10 || eventMessage == 30){
+                santaLikeAnimationStart("/json/angry.json", 1);
+            }
+        });
+    </script>
+   
+
+</body>
+</html>

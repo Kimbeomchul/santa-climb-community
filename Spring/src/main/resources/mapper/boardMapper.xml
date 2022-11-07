@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mozzi.santa.mapper.BoardMapper">
+
+    <select id="selectSearchedBoardList" resultType="com.mozzi.santa.dto.Board">
+        /* 게시판 검색 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.boardImage
+             ,a.createDate
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+             ,(SELECT COUNT(*) FROM board_likes e WHERE e.socialId = #{socialId} AND e.boardNum = a.boardNum) as likesYsno
+        FROM board a
+        WHERE a.title LIKE CONCAT('%',#{searchWord},'%') OR a.content LIKE CONCAT('%',#{searchWord},'%') AND (SELECT COUNT(banSocialId) FROM ban_user WHERE reqSocialId = 1994237809 AND banSocialId = a.writer) = 0
+        ORDER BY boardNum ASC
+
+    </select>
+
+    <select id="selectSearchProfileBoardList" resultType="com.mozzi.santa.dto.Board">
+        /* 프로필 게시판 검색 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.boardImage
+             ,a.createDate
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+             ,(SELECT COUNT(*) FROM board_likes e WHERE e.socialId = #{mySocialId} AND e.boardNum = a.boardNum) as likesYsno
+        FROM board a
+        WHERE a.writer = #{socialId}
+        ORDER BY boardNum ASC
+
+    </select>
+
+    <select id="selectBoardList" resultType="com.mozzi.santa.dto.Board">
+        /* 게시글 조회 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.boardImage
+             ,a.createDate
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+             ,(SELECT COUNT(*) FROM board_likes e WHERE e.socialId = #{socialId} AND e.boardNum = a.boardNum) as likesYsno
+        FROM board a
+        WHERE (SELECT COUNT(banSocialId) FROM ban_user WHERE reqSocialId = #{socialId} AND banSocialId = a.writer) = 0
+        ORDER BY boardNum DESC
+            LIMIT #{start} , #{end}
+    </select>
+
+    <select id="selectBoardListPopular" resultType="com.mozzi.santa.dto.Board">
+        /* 게시글 인기순 조회 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.boardImage
+             ,a.createDate
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+             ,(SELECT COUNT(*) FROM board_likes e WHERE e.socialId = #{socialId} AND e.boardNum = a.boardNum) as likesYsno
+        FROM board a
+        WHERE (SELECT COUNT(banSocialId) FROM ban_user WHERE reqSocialId = #{socialId} AND banSocialId = a.writer) = 0
+        ORDER BY boardLikes DESC
+            LIMIT #{start} , #{end}
+    </select>
+
+    <select id="selectRecommendBoardList" resultType="com.mozzi.santa.dto.Board">
+        /* 추천 게시글 3개 조회 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.createDate
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT memberImage FROM member d WHERE a.writer = d.socialId) as memberImage
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+        FROM board a
+        WHERE a.createDate BETWEEN DATE_ADD(NOW(), INTERVAL -1 MONTH) AND NOW() AND (SELECT COUNT(banSocialId) FROM ban_user WHERE reqSocialId = #{socialId} AND banSocialId = a.writer) = 0
+        ORDER BY boardLikes DESC
+        LIMIT 3
+    </select>
+
+    <select id="selectBoardDetail" resultType="com.mozzi.santa.dto.BoardDetail">
+        /* 게시글 조회 */
+        SELECT
+            a.boardNum
+             ,a.title
+             ,a.content
+             ,a.boardImage
+             ,a.tag1
+             ,a.tag2
+             ,a.tag3
+             ,a.createDate
+             ,(SELECT socialId FROM member d WHERE a.writer = d.socialId) as socialId
+             ,(SELECT nickname FROM member d WHERE a.writer = d.socialId) as writer
+             ,(SELECT memberImage FROM member d WHERE a.writer = d.socialId) as writerImage
+             ,(SELECT COUNT(*) FROM board_likes b WHERE b.boardNum = a.boardNum) as boardLikes
+             ,(SELECT COUNT(*) FROM board_comments c WHERE c.boardNum = a.boardNum) as boardComments
+             ,(SELECT COUNT(*) FROM board_likes WHERE boardNum = a.boardNum AND socialId = #{socialId}) as userLikes
+             ,(SELECT COUNT(*) FROM follow WHERE follower = #{socialId} AND following = a.writer) as followYsno
+        FROM board a
+        WHERE boardNum = #{boardNum}
+    </select>
+
+    <select id="selectBoardWriter" resultType="String">
+        /* 게시글 조회 */
+        SELECT
+             (SELECT socialId FROM member b WHERE a.writer = b.socialId) as socialId
+        FROM board a
+        WHERE boardNum = #{boardNum}
+    </select>
+
+    <select id="selectBoardComments" resultType="com.mozzi.santa.dto.BoardComment">
+        /* 게시글 댓글조회 */
+        SELECT
+             a.commentsNum
+             ,a.socialId
+             ,a.comments
+             ,a.createdDate
+             ,(SELECT memberImage FROM member b WHERE a.socialId = b.socialId) as memberImage
+             ,(SELECT nickname FROM member b WHERE a.socialId = b.socialId) as nickname
+             ,a.reply
+             ,(SELECT COUNT(boardCommentLikes) FROM board_comment_likes WHERE socialId = #{socialId} AND commentNum = a.commentsNum) as commentLikesYsno
+             ,(SELECT COUNT(commentNum) FROM board_comment_likes WHERE commentNum = a.commentsNum) as commentLikesCnt
+             ,(SELECT COUNT(commentsNum) FROM board_comments WHERE commentsNum = a.commentsNum AND socialId = #{socialId}) as myCommentYsno
+        FROM board_comments a
+        WHERE boardNum = #{boardNum}AND (SELECT COUNT(banSocialId) FROM ban_user WHERE reqSocialId = #{socialId} AND banSocialId = a.socialId) = 0
+    </select>
+
+    <select id="findBoardLikes" resultType="Long">
+        /* 게시판 좋아요여부 조회 */
+        SELECT
+              COUNT(boardLikesNum)
+        FROM  board_likes
+        WHERE boardNum = #{boardNum}
+        AND   socialId = #{socialId}
+    </select>
+
+    <select id="findReport" resultType="Long">
+        /* 신고하기 조회 */
+        SELECT
+            COUNT(*)
+        FROM  report
+        WHERE socialId = #{socialId}
+          AND   flag = #{flag}
+          AND   domNum = #{domNum}
+    </select>
+
+    <select id="findCommentLikes" resultType="Long">
+        /* 게시판 댓글 좋아요여부 조회 */
+        SELECT
+            COUNT(boardCommentLikes)
+        FROM  board_comment_likes
+        WHERE commentNum = #{commentNum}
+          AND   socialId = #{socialId}
+    </select>
+
+    <update id="updateBoard">
+        UPDATE
+            board
+           SET
+              title = #{board.title}
+             ,content = #{board.content}
+             ,boardImage = #{board.boardImage}
+        WHERE
+            boardNum = #{boardNum}
+
+    </update>
+
+    <insert id="insertCommentLikes">
+        /* 게시판 댓글 좋아요 추가 */
+        INSERT
+        INTO board_comment_likes(commentNum , socialId)
+        VALUES (#{commentNum},#{socialId})
+    </insert>
+
+
+    <insert id="insertLikes">
+        /* 게시판 좋아요 추가 */
+        INSERT
+        INTO board_likes(boardNum , socialId)
+        VALUES (#{boardNum},#{socialId})
+    </insert>
+
+    <insert id="insertBoard">
+        /* 게시판 추가 */
+        INSERT
+        INTO board(title , content , boardImage  , writer , tag1 ,tag2 ,tag3)
+        VALUES (#{board.title},#{board.content},#{board.boardImage} ,#{socialId} ,#{board.tag1} ,#{board.tag2} ,#{board.tag3} )
+    </insert>
+
+    <insert id="insertComments">
+        /* 댓글쓰기 */
+        INSERT
+        INTO board_comments(boardNum , socialId , comments ,reply)
+        VALUES (#{boardNum},#{socialId}, #{comments} , #{reply})
+    </insert>
+
+    <insert id="insertBanUser">
+        /* 벤 유저 추가 */
+        INSERT
+        INTO ban_user(reqSocialId , banSocialId)
+        VALUES (#{socialId},#{banSocialId})
+    </insert>
+
+    <insert id="insertReport">
+        /* 신고하기기능 */
+        INSERT
+        INTO report(socialId , domNum, flag)
+        VALUES (#{socialId},#{domNum}, #{flag})
+    </insert>
+
+    <delete id="deleteLikes" >
+        /* 게시판 좋아요 삭제 */
+        DELETE
+        FROM board_likes
+        WHERE boardNum = #{boardNum}
+          AND   socialId = #{socialId}
+    </delete>
+
+    <delete id="deleteCommentLikes" >
+        /* 게시판 댓글 좋아요 삭제 */
+        DELETE
+        FROM board_comment_likes
+        WHERE commentNum = #{commentNum}
+          AND   socialId = #{socialId}
+    </delete>
+
+    <delete id="deleteBoard" >
+        /* 게시판 삭제 */
+        DELETE
+        FROM board
+        WHERE boardNum = #{boardNum}
+    </delete>
+
+    <delete id="deleteLikesFordel" >
+        /* 게시판삭제시 좋아요 삭제 */
+        DELETE
+        FROM board_likes
+        WHERE boardNum = #{boardNum}
+    </delete>
+
+    <delete id="deleteCommentsFordel" >
+        /* 게시판삭제시 댓글 삭제 */
+        DELETE
+        FROM board_comments
+        WHERE boardNum = #{boardNum}
+    </delete>
+
+    <delete id="deleteComment">
+        /* 게시판 댓글삭제 */
+        DELETE
+        FROM board_comments
+        WHERE commentsNum = #{commentsNum} AND socialId = #{socialId}
+    </delete>
+
+    <delete id="deleteAllReply">
+        /* 답글 전체삭제 */
+        DELETE
+        FROM board_comments
+        WHERE reply = #{commentsNum}
+    </delete>
+
+    <delete id="deleteReplyLikes">
+        /* 댓글 좋아요삭제 */
+        DELETE
+        FROM board_comment_likes
+        WHERE commentNum = #{commentsNum}
+    </delete>
+
+</mapper>

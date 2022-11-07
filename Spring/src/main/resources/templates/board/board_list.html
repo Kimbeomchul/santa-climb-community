@@ -1,0 +1,322 @@
+<html xmlns:th="http://www.thymleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <script type="text/javascript" src="/js/santaUtil.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/font.css" type="text/css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment-with-locales.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.4/lottie.min.js"></script>
+</head>
+<body>
+<!-- 로딩바 -->
+<div class="wrapper" style="display: none;">
+    <div id="myGIF"></div>
+</div>
+<!-- 로딩바 -->
+<!-- Alert -->
+<div class="start_modal" id="guest_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>현재 게스트 로그인중입니다</h3>
+        <p>로그인 후 이용 가능합니다</p>
+        <div class="modal_bottom">
+            <p class="hide_alert">취소</p>
+            <p class="goto_login">회원가입</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+    <div class="wrap">
+        <section class="main community">
+            <!-- header -->
+            <div th:replace="~{fragment/header :: header ('커뮤니티')}"></div>
+            <div class="community_box">
+                <div class="community_sliding search_tab">
+                    <p style="font-weight: bold">베스트</p>
+                    <div class="community_sliding_box">
+                        <div class="recommend_div" th:each="recommend : ${recommend}" th:onclick="|location.href='https://santa-community.co.kr/board/detail/' + ${recommend.boardNum}|">
+                           <ul>
+                               <li style="text-overflow: ellipsis;overflow: hidden;" th:text="${recommend.title}">관악산 후기</li>
+                               <li>
+                                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10.7905 12.357L10.246 12.6482C9.40199 13.0994 8.4595 13.3348 7.50251 13.3333L7.5 13.3333C4.27822 13.3333 1.66667 10.7218 1.66667 7.5C1.66667 4.27822 4.27822 1.66667 7.5 1.66667C10.7218 1.66667 13.3333 4.27822 13.3333 7.5V7.5025C13.3348 8.4595 13.0994 9.40199 12.6482 10.246L12.357 10.7905L12.8047 12.8047L10.7905 12.357ZM15 15L14.118 11.0317C14.6988 9.94528 15.0018 8.73198 15 7.5C15 3.35775 11.6422 0 7.5 0C3.35775 0 0 3.35775 0 7.5C0 11.6422 3.35775 15 7.5 15C8.73198 15.0018 9.94528 14.6988 11.0317 14.118L15 15Z" fill="#17C99E"/>
+                                    </svg>
+                                    <p th:text="${recommend.boardComments}">20</p>
+                                </li>
+                           </ul>
+                           <p style="text-overflow: ellipsis;overflow: hidden;" class="recommend_content" th:utext="${recommend.content}">관악산 처음 다녀왔는데...</p>
+                           <div class="profile">
+                                <div>
+                                    <img th:src="${recommend.memberImage}" src="" alt="" style="width: 100%;">
+                                </div>
+                                <p class="recommend_writer"><span th:text="${recommend.writer}" style="color:black; font-size: 12px"></span><br><span class="recommend_time" th:value="${recommend.createDate}"></span></p>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENTS -->
+
+                <div class="c_bottom" id="bottom_content">
+                    <div th:if="${options == '1'}" class="c_bottom_tab">
+                        <p class="on bottom_tabs show_latest">최신순</p>
+                        <p class="bottom_tabs show_popular">인기순</p>
+                    </div>
+                    <div th:unless="${options == '1'}" class="c_bottom_tab">
+                        <p class="bottom_tabs show_latest">최신순</p>
+                        <p class="on bottom_tabs show_popular">인기순</p>
+                    </div>
+                    <div class="content_box" th:each="board : ${board}" th:value="${board.boardNum}">
+                        <div class="c_bottom_top" th:onclick="|location.href='https://santa-community.co.kr/board/detail/' + ${board.boardNum}|">
+                            <div class="c_b_left">
+                                <h3 style="text-overflow: ellipsis;overflow: hidden;" th:text="${board.title}">제목</h3>
+                                <p style="text-overflow: ellipsis;overflow: hidden;" th:utext="${board.content}" class="board_content">내용</p>
+                            </div>
+                            <img th:if="${board.boardImage == ''}" th:src="@{/img/defaultImage.svg}" alt="" height="58" width="85">
+                            <img th:unless="${board.boardImage == ''}" th:src="@{${board.boardImage}}" alt="" height="58" width="85">
+                        </div>
+                        <div class="c_bottom_bottom">
+                            <p>
+                                <span th:text="${board.writer}">사용자</span>
+                                <span></span>
+                                <span class="createdTime" th:value="${board.createDate}"></span>
+                            </p>
+                            <ul>
+                                <li class="likesBtn" th:value="${board.boardNum}">
+                                    <img class="likesImage" th:classappend="|like_img${board.boardNum}|" th:if="${board.likesYsno} == 0" src="/img/like_icon_off.svg">
+                                    <img class="likesImage"  th:classappend="|like_img${board.boardNum}|" th:unless="${board.likesYsno} == 0" src="/img/like_icon_active.svg">
+                                    <p th:classappend="|likes${board.boardNum}|" th:text="${board.boardLikes}">1,000</p>
+                                </li>
+                                <li><img src="/img/chatting_icon.svg"><p th:text="${board.boardComments}">12</p></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <div th:if="${guest == 'N'}" class="plus_btn" th:onclick="location.href='https://santa-community.co.kr/board/write'">
+            <p style="font-weight: bold">+</p>
+        </div>
+
+        <div th:replace="~{fragment/footer :: bottom_navigation_bar ('board')}"></div>
+
+    </div>
+    <script th:inline="javascript">
+        $(function(){
+            // Writing Complete
+            if(window.location.search.substring(8) == "Y"){
+                santaLikeAnimationStart("/json/check.json", 2.5);
+            }
+            if(window.location.search.substring(7) == "1"){
+                $("#guest_alert").fadeIn(200);
+                $(".goto_login").on("click",function(){
+                    location.replace("/guest/logout");
+                });
+            }
+
+            $(".hide_alert").on("click",function (){
+                $("#guest_alert").fadeOut(200);
+            });
+
+            let cho = /[ㄱ-ㅎ|ㅏ-ㅣ]/g
+            let lengthClass= $(".createdTime").length;
+            let recommendLengthClass = $(".recommend_time").length;
+            let boardContentLength = $(".board_content").length;
+            let recommendContentLength = $(".recommend_content").length;
+
+            // 컨텐츠 길이제한
+            for(let x=0; x<boardContentLength; x++){
+                let limitContent =$(".board_content")[x];
+                if(limitContent.innerText.length >= 30){
+                    limitContent.innerHTML = limitContent.innerText.substring(0, 28) +"..."
+                }
+            }
+            // 추천 컨텐츠 길이제한한
+           for(let y=0; y<recommendContentLength; y++){
+                let recommendLimitContent = $(".recommend_content")[y];
+                if(recommendLimitContent.innerText.length > 10){
+                    recommendLimitContent.innerHTML = recommendLimitContent.innerText.substring(0,10) + "...";
+                }
+            }
+
+
+            // 추천게시글 시간변경
+            for(let j =0; j<recommendLengthClass; j++){
+                let recommendCreateDate = $(".recommend_time:eq("+ j +")").attr("value");
+                $(".recommend_time:eq("+ j +")").text(moment(recommendCreateDate).format("YYYY.MM.DD"));
+            }
+
+            for (let i =0; i<lengthClass; i++ ){
+                let createdDate = $(".createdTime:eq("+i+")").attr("value");
+                $(".createdTime:eq("+i+")").text(moment(createdDate, "YYYY-MM-DD HH:mm:ss").locale('ko').fromNow());
+            }
+
+            // 검색기능
+            $(".search_icon > svg").click(function(){
+                let guestYsno = "[(${guest})]";
+                if(guestYsno == "Y"){
+                    $("#guest_alert").fadeIn(200);
+                    $(".goto_login").on("click",function(){
+                        location.replace("/guest/logout");
+                    });
+                    return false;
+                }
+                $(".search_icon > input").toggleClass('active');
+                if($(".search_icon > input").hasClass('active') == false && $(".search_icon > input").val() != ''){
+                    let val_input = $(".search_icon > input").val().trim();
+                    if(cho.test(val_input)){
+                        $(".search_icon > input").val("");
+                        Print.postMessage('초성 검색은 불가능합니다');
+                        return false;
+                    }
+                    if(val_input == '') return false;
+                    location.href= "https://santa-community.co.kr/board/search/"+val_input;
+                }
+            });
+
+            $("#searchInput").on("keydown",function (e){
+                if(e.key === "Enter"){
+                    $(".search_icon > svg").click();
+                }
+            });
+
+            // 최신순, 댓글순, 좋아요순 선택
+            $(document).on("click",".bottom_tabs",function(){
+
+                // 이미 체크상태면 나가기
+                if($(this).hasClass("on")) return;
+
+                // 인기순
+                if($(".show_popular").hasClass("on")){
+                    $(".bottom_tabs").removeClass("on");
+                    $(this).addClass("on");
+                    location.href="https://santa-community.co.kr/board/list?options=1";
+                }else if($(".show_latest").hasClass("on")){
+                    $(".bottom_tabs").removeClass("on");
+                    $(this).addClass("on");
+                    // 최신순
+                    location.href="https://santa-community.co.kr/board/list?options=2";
+                }
+
+            });
+
+    
+            $(".c_bottom_bottom > ul").find('li:eq(0)').click(function(){
+                let $this = $(this);
+                $this.find('>img').attr("src", function(index, attr){
+                    if(attr.match('off')){
+                        return attr.replace("_off.png", "_active.png");
+                    }else {
+                        return attr.replace("_active.png", "_off.png");
+                    }
+                });
+            });
+
+            $(document).on("click",".likesBtn",function(){
+                let boardNumLikes = $(this).val();
+                let thisBoardId = $(".likes" + boardNumLikes).text();
+                $.ajax({
+                     type: "POST",
+                     url: "https://santa-community.co.kr/board/like/" + boardNumLikes,
+                     success : function(result){
+                         if(result == 2){
+                             santaLikeAnimationStart("/json/likes.json", 0.9);
+                             $(".like_img" + boardNumLikes).attr("src","/img/like_icon_active.svg");
+                             $(".likes"+ boardNumLikes).text(parseInt(thisBoardId) + 1);
+                         }else{
+                             $(".like_img" + boardNumLikes).attr("src","/img/like_icon_off.svg");
+                             $(".likes"+ boardNumLikes).text(parseInt(thisBoardId) - 1);
+                         }
+                     },
+                     error : function(err){
+                         console.log("좋아요 에러 = {}", err);
+                     }
+                 });
+            });
+
+
+            // 쓰로틀링 타이머
+            let timer;
+            // 스크롤감지 함수
+            $(window).scroll(function(){
+
+                // 일정수준 내려갈시 상단이동 버튼생성
+                if($(window).scrollTop() > 500){
+                    $(".plus_btn").fadeOut(450);
+                }
+                // 일정수준 상단 도달시 버튼사라져어
+                if($(window).scrollTop() < 300){
+                    $(".plus_btn").fadeIn(450);
+                }
+
+                // 바닥감지 다음페이지 로딩
+                if($(window).scrollTop() + $(window).height() >= $(document).height()){
+                    if($(".content_box").length < 10){
+                        return false;
+                    }
+
+                    let directPageURL = "https://santa-community.co.kr/board/list/";
+                    if($(".show_popular").hasClass("on")){
+                        directPageURL = "https://santa-community.co.kr/board/list/popular/"
+                    }
+                    // Throttle Scroll event
+                    if(!timer){
+                        timer = setTimeout(()=>{
+                            timer = null;
+                            let pagingStart = $(".content_box").length;
+                            $.ajax({
+                                type: "GET",
+                                url: "https://santa-community.co.kr/board/list/" + pagingStart,
+                                success : function(result){
+                                    append_board(result);
+                                },
+                                error : function(err){
+                                    console.log(err);
+                                }
+                            });
+                        }, 500);
+                    }
+                }
+            });
+
+            function append_board(obj){
+                let str = "";
+                for(let i=0; i<obj.length; i++){
+                    let imageObj = obj[i]['boardImage'];
+                    let likeYsno = obj[i]['likesYsno'];
+                    let strLikeYsno = "/img/like_icon_active.svg";
+
+                    if(imageObj == ''){
+                        imageObj = "/img/defaultImage.svg";
+                    }
+                    if(likeYsno == 0){
+                        strLikeYsno = "/img/like_icon_off.svg";
+                    }
+
+                    str += "<div class='content_box' value='"+ obj[i]['boardNum'] +"'>";
+                    str += "<div class='c_bottom_top' onclick='location.href=\"" + "/board/detail/" + obj[i]['boardNum'] +"\"    '>";
+                    str += "<div class='c_b_left'>";
+                    str += "<h3>"+ obj[i]['title'] +"</h3>";
+                    str += "<p>"+ obj[i]['content'] +"</p></div>";
+                    str += "<img src='"+ imageObj +"' alt='' height='58' width='85'></div>";
+                    str += "<div class='c_bottom_bottom'><p>";
+                    str += "<span>"+ obj[i]['writer'] +"</span><span></span>";
+                    str += "<span class='createdTime'>"+ moment(obj[i]['createDate'], "YYYY-MM-DD HH:mm:ss").locale('ko').fromNow() +"</span></p>";
+                    str += "<ul><li class='likesBtn' value='"+ obj[i]['boardNum'] +"'>";
+                    str += "<img class='like_img"+ obj[i]['boardNum'] +"' src='"+ strLikeYsno +"'>";
+                    str += "<p class='likes"+ obj[i]['boardNum'] +"'>"+ obj[i]['boardLikes'] +"</p></li>";
+                    str += "<li><img src='/img/chatting_icon.svg'><p>"+ obj[i]['boardComments'] +"</p>";
+                    str += "</li></ul></div></div>";
+
+                }
+                document.getElementById("bottom_content").innerHTML += str;
+            }
+        });
+
+    </script>
+</body>
+</html>

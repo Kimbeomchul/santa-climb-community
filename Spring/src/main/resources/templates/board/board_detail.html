@@ -1,0 +1,593 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<script type="text/javascript" src="/js/santaUtil.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment-with-locales.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.9.4/lottie.min.js"></script>
+<div th:replace="~{fragment/header :: linkHead}"></div>
+
+<body style="background: white">
+<!-- 로딩바 -->
+<div class="wrapper" style="display: none;">
+    <div id="myGIF"></div>
+</div>
+<!-- 로딩바 -->
+
+<!-- Alert -->
+<div class="start_modal" id="delete_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>정말로 삭제하시겠습니까?</h3>
+        <p></p>
+        <div class="modal_bottom">
+            <p class="hide_alert">취소</p>
+            <p class="delete_board">삭제</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+<!-- Alert -->
+<div class="start_modal" id="delete_comment_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>정말로 삭제하시겠습니까?</h3>
+        <p></p>
+        <div class="modal_bottom">
+            <p class="hide_comment_alert">취소</p>
+            <p id="delete_comment">삭제</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+<!-- Alert -->
+<div class="start_modal" id="ban_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>해당 <span id="ban_clicked">댓글</span>을 신고하시겠습니까?</h3>
+        <p></p>
+        <div class="modal_bottom">
+            <p class="hide_ban_alert">취소</p>
+            <p id="ban_dom">신고하기</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+<!-- Alert -->
+<div class="start_modal" id="block_user_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>이 회원을 차단하시겠습니까?</h3>
+        <p>이 회원의 모든 게시글/댓글을 차단합니다</p>
+        <div class="modal_bottom">
+            <p class="hide_ban_user_alert">취소</p>
+            <p id="block_user_submit">확인</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+<!-- Alert -->
+<div class="start_modal" id="ban_user_alert" style="display: none;">
+    <div class="modal_box">
+        <h3>이 회원의 모든 <span id="ban_alert_span">게시글/댓글</span>을 숨길까요?</h3>
+        <p>숨김기능은 1:1문의를 통해 취소할 수 있습니다</p>
+        <div class="modal_bottom">
+            <p class="hide_ban_user_alert">취소</p>
+            <p id="ban_user_submit">확인</p>
+        </div>
+    </div>
+</div>
+<!-- Alert -->
+<div class="wrap">
+    <section class="main community_detail">
+        <header class="header">
+            <a href="https://santa-community.co.kr/board/list">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clip-path="url(#clip0_2_882)">
+                        <path d="M17.1699 24C17.0383 24.0007 16.9078 23.9755 16.786 23.9257C16.6641 23.876 16.5533 23.8027 16.4599 23.71L8.28988 15.54C7.82425 15.0755 7.45482 14.5238 7.20276 13.9163C6.95069 13.3089 6.82095 12.6577 6.82095 12C6.82095 11.3423 6.95069 10.6911 7.20276 10.0837C7.45482 9.4762 7.82425 8.92445 8.28988 8.45999L16.4599 0.290002C16.5531 0.196764 16.6638 0.122803 16.7856 0.0723425C16.9075 0.0218822 17.038 -0.00408935 17.1699 -0.00408936C17.3017 -0.00408936 17.4323 0.0218822 17.5541 0.0723425C17.676 0.122803 17.7866 0.196764 17.8799 0.290002C17.9731 0.38324 18.0471 0.49393 18.0975 0.615752C18.148 0.737574 18.174 0.868142 18.174 1C18.174 1.13186 18.148 1.26243 18.0975 1.38425C18.0471 1.50607 17.9731 1.61676 17.8799 1.71L9.70988 9.87999C9.14808 10.4425 8.83252 11.205 8.83252 12C8.83252 12.795 9.14808 13.5575 9.70988 14.12L17.8799 22.29C17.9736 22.3829 18.048 22.4935 18.0988 22.6154C18.1495 22.7373 18.1757 22.868 18.1757 23C18.1757 23.132 18.1495 23.2627 18.0988 23.3846C18.048 23.5064 17.9736 23.617 17.8799 23.71C17.7864 23.8027 17.6756 23.876 17.5538 23.9257C17.432 23.9755 17.3015 24.0007 17.1699 24Z"
+                              fill="#374957"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_2_882">
+                            <rect width="24" height="24" fill="white"/>
+                        </clipPath>
+                    </defs>
+                </svg>
+            </a>
+            <div th:value="${board.tag1}" class="header_profile">
+                <div class="header_profile_img block_img" th:value="${board.socialId}">
+                    <img id="writer_img" th:src="@{${board.writerImage}}" src="/img/circle_img.png" alt="" style="width: 100%;">
+                </div>
+
+                <div>
+                    <p><em th:text="${board.writer}" id="writer"></em> <span></span> <span id="written_time"></span></p>
+                    <p id="tagSpan">
+
+                    </p>
+                </div>
+            </div>
+            <p th:if="${myBoard == 'N'}" style="right:55px" class="follow">팔로우</p>
+            <div class="setting" th:if="${myBoard == 'Y'}">
+                <span></span>
+                <span></span>
+                <span></span>
+                <div class="setting_popup" style="display: none">
+                    <p id="setting_modify">수정</p>
+                    <p id="setting_delete">삭제</p>
+                </div>
+            </div>
+            <div class="setting" th:unless="${myBoard == 'Y'}">
+                <span></span>
+                <span></span>
+                <span></span>
+                <div class="setting_popup" style="display: none">
+                    <p class="report_ban" th:name="board" th:value="${board.socialId}" th:board="${board.boardNum}">신고하기</p>
+                    <p class="block_img" th:name="board" th:value="${board.socialId}" th:board="${board.boardNum}">차단하기</p>
+                    <p class="ban_content ban_detail" th:value="${board.socialId}">숨기기</p>
+                </div>
+            </div>
+        </header>
+
+
+        <div class="community_1">
+            <img class="view_img" th:if="${board.boardImage != ''}" th:src="@{${board.boardImage}}"
+                 src="/img/circle_img.png" alt="">
+            <img class="view_img" th:unless="${board.boardImage != ''}" th:src="@{/img/defaultImage.svg}"
+                 src="/img/circle_img.png" alt="" style="height:3%">
+            <div class="comm_box">
+                <ul>
+                    <li th:if="${board.userLikes} <= 0" th:value="${board.userLikes}" class="like_btn like_off">
+                        <svg width="17" height="15" viewBox="0 0 17 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path id="like_btn"
+                                  d="M1.88051 7.29007L1.87901 7.28859C1.52195 6.93626 1.238 6.51542 1.04405 6.05058C0.850059 5.58562 0.75 5.08627 0.75 4.58183C0.75 4.07739 0.850059 3.57803 1.04405 3.11308C1.23796 2.64832 1.52184 2.22756 1.8788 1.87526C2.61164 1.15331 3.59473 0.75 4.61759 0.75C5.64018 0.75 6.62322 1.15308 7.35595 1.87458C7.35625 1.87487 7.35655 1.87516 7.35684 1.87546L8.05698 2.57C8.35095 2.86162 8.82563 2.85982 9.11739 2.56599L9.64622 2.03339C10.3787 1.31308 11.361 0.910691 12.3827 0.910691C13.4056 0.910691 14.3889 1.31403 15.1217 2.03594C15.4786 2.38784 15.7624 2.80822 15.9563 3.27253C16.1501 3.73688 16.25 4.23575 16.25 4.73984C16.25 5.24393 16.1501 5.7428 15.9563 6.20715C15.7624 6.67146 15.4786 7.09184 15.1217 7.44373L15.1195 7.44591L8.58468 13.9429L1.88051 7.29007Z"
+                                  fill="white" stroke="black" stroke-width="1.5" stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+                        </svg>
+                    </li>
+                    <li th:unless="${board.userLikes} <= 0" th:value="${board.userLikes}" class="like_btn like_on">
+                        <svg width="17" height="15" viewBox="0 0 17 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path id="like_btn"
+                                  d="M1.88051 7.29007L1.87901 7.28859C1.52195 6.93626 1.238 6.51542 1.04405 6.05058C0.850059 5.58562 0.75 5.08627 0.75 4.58183C0.75 4.07739 0.850059 3.57803 1.04405 3.11308C1.23796 2.64832 1.52184 2.22756 1.8788 1.87526C2.61164 1.15331 3.59473 0.75 4.61759 0.75C5.64018 0.75 6.62322 1.15308 7.35595 1.87458C7.35625 1.87487 7.35655 1.87516 7.35684 1.87546L8.05698 2.57C8.35095 2.86162 8.82563 2.85982 9.11739 2.56599L9.64622 2.03339C10.3787 1.31308 11.361 0.910691 12.3827 0.910691C13.4056 0.910691 14.3889 1.31403 15.1217 2.03594C15.4786 2.38784 15.7624 2.80822 15.9563 3.27253C16.1501 3.73688 16.25 4.23575 16.25 4.73984C16.25 5.24393 16.1501 5.7428 15.9563 6.20715C15.7624 6.67146 15.4786 7.09184 15.1217 7.44373L15.1195 7.44591L8.58468 13.9429L1.88051 7.29007Z"
+                                  fill="#17C99E" stroke="#17C99E" stroke-width="1.5" stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+                        </svg>
+                    </li>
+                    <li>
+                        <p>좋아요<span th:text="${board.boardLikes}" id="likes_cnt">0</span></p>
+                        <p>댓글<span th:text="${board.boardComments}" id="comment_cnt">0</span></p>
+                    </li>
+                </ul>
+                <p id="main_content"></p>
+
+
+                <div id="chatting_area" class="chatting_area">
+                    <div style="text-align: center; padding-top: 25%" th:if="${commentCnt} == 0"><span
+                            style="font-weight: bold; font-size: 15px;">댓글이 없습니다.<br> 첫 댓글을 작성해보세요!</span>
+                    </div>
+
+                    <div th:each="comments : ${comments}">
+                        <div th:if="${comments.reply == ''}" class="chatting_area_box">
+                            <div class="comment-content" th:value="${comments.boardNum}">
+                                <div class="chatting_area_img block_img" th:value="${comments.socialId}" th:classappend="${comments.socialId}">
+                                    <img th:src="${comments.memberImage}" src="/img/circle_img.png" alt="" style="width: 100%;">
+                                </div>
+
+                                <div class="chatting_txt">
+                                    <div class="catt_titile">
+                                        <p>
+                                            <em th:text="${comments.nickname}">바다조아</em>
+                                            <span></span>
+                                            <span class="comment_time" th:value="${comments.createdDate}">43분전</span>
+                                            <span th:if="${comments.myCommentYsno} != 0" class="delete_comment_btn" th:value="${comments.commentsNum}" style="box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; font-weight: 400; font-weight: bold; color:#f31010;">  삭제</span>
+                                        </p>
+                                        <img class="report_ban" th:unless="${comments.myCommentYsno} != 0" th:name="comment" th:value="${comments.commentsNum}" src="/img/alert.svg" alt="" style="height:13px; width: 100%; width:17px; margin-top: 4px; margin-left:5px;">
+                                    </div>
+                                    <p th:text="${comments.comments}"></p>
+                                    <p>
+                                        <span th:if="${comments.commentLikesYsno} == 0 and ${comments.commentLikesCnt} != 0" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}" th:text="|좋아요 ${comments.commentLikesCnt}|">좋아요</span>
+                                        <span th:if="${comments.commentLikesYsno} == 0 and ${comments.commentLikesCnt} == 0" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}">좋아요</span>
+                                        <span th:unless="${comments.commentLikesYsno} == 0" style="color:#17C99E;" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}" th:text="|좋아요 ${comments.commentLikesCnt}|">좋아요</span>
+                                        <span class="comment_reply" th:id="${comments.commentsNum}" th:value="${comments.nickname}" style="margin-right:2px;">답글쓰기</span>
+                                        <span th:if="${comments.myCommentYsno} == 0" class="ban_content" th:id="${comments.commentsNum}" th:value="${comments.socialId}">숨기기</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:unless="${comments.reply == ''}">
+                            <div class="chatting_area_box" th:value="${comments.reply}" th:name="${comments.commentsNum}">
+                                 <div class="inner_chatting">
+                                     <div class="chatting_area_img block_img" th:value="${comments.socialId}" th:classappend="${comments.socialId}">
+                                         <img th:src="${comments.memberImage}" src="/img/circle_img.png" alt="" style="width: 100%;">
+                                     </div>
+                                     <div class="chatting_txt">
+                                         <div class="catt_titile">
+                                             <p>
+                                                 <em th:text="${comments.nickname}">바다조아</em>
+                                                 <span></span>
+                                                 <span class="comment_time" th:value="${comments.createdDate}">43분전</span>
+                                                 <span th:if="${comments.myCommentYsno} != 0" class="delete_comment_btn" th:value="${comments.commentsNum}" style="box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; font-weight: 400; font-weight: bold; color:#f31010;">  삭제</span>
+                                             </p>
+                                         </div>
+                                         <p th:text="${comments.comments}" ></p>
+                                         <p>
+                                             <span th:if="${comments.commentLikesYsno} == 0 and ${comments.commentLikesCnt} != 0" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}" th:text="|좋아요 ${comments.commentLikesCnt}|">좋아요</span>
+                                             <span th:if="${comments.commentLikesYsno} == 0 and ${comments.commentLikesCnt} == 0" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}">좋아요</span>
+                                             <span th:unless="${comments.commentLikesYsno} == 0" style="color:#17C99E;" class="comment_likes" th:classappend="|comment_likes_${comments.commentsNum}|" th:value="${comments.commentsNum}" th:text="|좋아요 ${comments.commentLikesCnt}|">좋아요</span>
+                                             <span th:if="${comments.myCommentYsno} == 0" class="ban_content" th:id="${comments.commentsNum}" th:value="${comments.socialId}">숨기기</span>
+                                         </p>
+                                     </div>
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chatting_input">
+            <form th:action="@{|${boardNum}/comment/write|}" method="post" id="comment_form" name="comment_form">
+                <div>
+                    <button id="reply_btn" style="position: absolute; padding: 11.5px 11px;text-align: left;margin-left: 0px;border-radius: 13px;background: #0dbb90; display: none;"></button>
+                    <input id="comment_input" type="text" name="comments" placeholder="댓글을 입력해주세요." style="padding-right: 40px; padding-left: 5px" maxlength="45">
+                    <input id="reply" type="hidden" name="reply">
+                    <svg width="17" height="21" viewBox="0 0 17 21" fill="none" xmlns="http://www.w3.org/2000/svg"
+                         id="submit_comment">
+                        <path id="comment_submit"
+                              d="M16.488 9.82137C16.8136 10.0147 16.8145 10.4858 16.4895 10.6803L0.92126 19.9994C0.562818 20.214 0.114903 19.9204 0.168602 19.5061L1.21725 11.4159C1.2478 11.1801 1.44014 10.9985 1.67726 10.9814L4.2555 10.7961C4.87235 10.7518 4.87531 9.84733 4.25876 9.79896L1.56396 9.58756C1.32666 9.56895 1.13538 9.38563 1.10671 9.14934L0.122473 1.03942C0.0724672 0.627392 0.517252 0.33735 0.874127 0.549275L16.488 9.82137Z"
+                              fill="#0EBB91"/>
+                    </svg>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+<form id="edit_board" name="edit_form" method="get" action="/board/edit">
+    <input type="hidden" name="boardImage" th:value="${board.boardImage}">
+    <input type="hidden" name="tag1" th:value="${board.tag1}">
+    <input type="hidden" name="tag2" th:value="${board.tag2}">
+    <input type="hidden" name="tag3" th:value="${board.tag3}">
+    <input type="hidden" name="title" th:value="${board.title}">
+    <input type="hidden" name="content" th:value="${board.content}">
+    <input type="hidden" name="boardNum" th:value="${board.boardNum}">
+</form>
+</body>
+
+
+<script th:inline="javascript">
+
+    let boardNum = "[(${boardNum})]"
+
+    $(document).ready(function () {
+
+        $("#main_content").html("[(${board.content})]");
+
+        let followYsno = "[(${board.followYsno})]";
+        let writtenTime = "[(${board.createDate})]";
+        let tag1 = "[(${board.tag1})]";
+        let tag2 = "[(${board.tag2})]";
+        let tag3 = "[(${board.tag3})]";
+
+        // 현재 접속중인 유저 표기
+        let loginUsers = [[${loginUsers}]];
+
+        for(let idx = 0; idx<loginUsers.length; idx++){
+            if($(".chatting_area_img").hasClass(loginUsers[idx])){
+                $(".chatting_area_img").addClass("on");
+            }
+        }
+
+
+        // 댓글 날짜설정
+        let comment_length = $(".chatting_txt").length;
+
+        for(let i =0; i<comment_length; i++){
+            let commentTime = $(".comment_time:eq("+i+")");
+            commentTime.text(moment(commentTime.attr("value")).locale('ko').fromNow());
+        }
+
+        // 날짜설정
+        $("#written_time").text(moment(writtenTime).locale('ko').fromNow());
+
+        if (tag1.trim()) $("#tagSpan").append("<span># " + tag1 + "</span>");
+        if (tag2.trim()) $("#tagSpan").append("<span># " + tag2 + "</span>");
+        if (tag3.trim()) $("#tagSpan").append("<span># " + tag3 + "</span>");
+
+        if (followYsno == "1") $(".follow").addClass("active");
+
+        // 태그 디자인 설정
+        let chkTag = "[(${board.tag1})]";
+        if (chkTag == '') {
+            $("#tagSpan").remove();
+            $(".header_profile").css("padding", "2.5px");
+        }
+
+        // 팔로우 버튼
+        $(".follow").on("click", function () {
+            let thisBoardWriter = "[(${board.socialId})]";
+
+            $.ajax({
+                type: "POST",
+                url: "https://santa-community.co.kr/follow/" + thisBoardWriter,
+                success: function (result) {
+                    if (result == 1) {
+                        $(".follow").toggleClass("active");
+                        ($(".follow").hasClass("active")) ? $(".follow").text("팔로잉") : $(".follow").text("팔로우");
+                    }
+                    if (result == -1){
+                        console.log("자기 자신을 팔로우 시도함");
+                    }
+                },
+                error: function (err) {
+                    console.log("팔로우 에러 = {}", err);
+                }
+            });
+        });
+
+        // 세팅 토글
+        $(".setting").on("click", function () {
+            $(".setting_popup").toggleClass('on');
+            if ($(".setting_popup").hasClass("on")) {
+                $(".setting_popup").show('nomal');
+            } else {
+                $(".setting_popup").hide('nomal');
+            }
+        });
+    });
+
+    $(".block_img").on("click",function(){
+      let blockId = $(this).attr("value");
+      $("#block_user_alert").fadeIn(200);
+
+      $("#block_user_submit").on("click",function (){
+        $.ajax({
+          type: "POST",
+          url: "https://santa-community.co.kr/board/ban/" + blockId,
+          success: function (result) {
+            if (result == 1) { // 차단성공시
+              location.replace("/board/list")
+            } else if(result == 0) {
+              Print.postMessage("자기 자신을 차단할 수 없습니다");
+            }
+          },
+          error: function (err) {
+            console.log("사용자 차단 에러 = {}", err);
+          }
+        });
+      });
+    });
+
+
+    // 사용자 차단기능
+    $(".ban_content").on("click",function() {
+        let banId = $(this).attr("value");
+        let findDom = $(this).hasClass("ban_detail");
+
+        $("#ban_user_alert").fadeIn(200);
+
+        $("#ban_user_submit").on("click",function (){
+            $.ajax({
+                type: "POST",
+                url: "https://santa-community.co.kr/board/ban/" + banId,
+                success: function (result) {
+                    if (result == 1) { // 차단성공시
+                        findDom ? location.replace("/board/list") : location.reload();
+                    } else {
+                        console.log("사용자 차단 에러 = {}");
+                    }
+                },
+                error: function (err) {
+                    console.log("사용자 차단 에러 = {}", err);
+                }
+            });
+        });
+    });
+
+    $(".hide_ban_user_alert").on("click",function (){
+        $("#ban_user_alert").fadeOut(200);
+        $("#block_user_alert").fadeOut(200);
+    });
+
+    // 게시글 신고하기
+    $(".report_ban").on("click",function(){
+      $("#ban_alert").fadeIn(200);
+      let findFlag = $(this).attr("name");
+      let banValue = $(this).attr("value");
+      if(findFlag == 'board') {
+        $("#ban_clicked").text("게시글");
+      }else {
+        $("#ban_clicked").text("댓글");
+      }
+
+      //신고하기
+      $("#ban_dom").on("click",function (){
+        $.ajax({
+          type: "POST",
+          url: "https://santa-community.co.kr/board/report/" + findFlag + "/" + banValue,
+          success: function (result) {
+            if (result == 1) { // 신고성공시
+              Print.postMessage("신고가 정상적으로 접수되었습니다");
+            }else{
+              Print.postMessage("이미 신고접수된 내용입니다");
+            }
+            $("#ban_alert").fadeOut(200);
+          },
+          error: function (err) {
+            Print.postMessage("이미 신고접수된 내용입니다");
+          }
+        });
+      });
+
+      $(".hide_ban_alert").on("click",function (){
+        $("#ban_alert").fadeOut(200);
+      });
+    });
+
+
+
+
+    // 댓글적기
+    $("#submit_comment").on({
+        click: function () {
+            let trimInput = $("#comment_input").val().trim();
+            document.getElementById("comment_input").value = $("#comment_input").val().trim();
+            if (trimInput == '') return false;
+            if(!$("#reply_btn").hasClass("on")){
+                document.getElementById("reply").value = "";
+            }
+
+            $("#comment_form").submit();
+        },
+        keydown: function (e) {
+            if (e.key === "Enter") {
+                let trimInput = $("#comment_input").val().trim();
+                document.getElementById("comment_input").value = $("#comment_input").val().trim();
+                if (trimInput == '') return false;
+                if(!$("#reply_btn").hasClass("on")){
+                    document.getElementById("reply").value = "";
+                }
+
+                $("#comment_form").submit();
+            }
+        }
+    });
+
+    document.comment_form.addEventListener("keydown", evt => {
+        if (evt.code === "Enter"){
+            evt.preventDefault();
+            $("#submit_comment").click();
+        }
+    });
+
+
+    // 모달 fadeout
+    $(".hide_alert").on("click", function () {
+        $("#delete_alert").fadeOut(200);
+    });
+    $(".hide_comment_alert").on("click", function () {
+        $("#delete_comment_alert").fadeOut(200);
+    });
+
+    // 댓글 좋아요
+    $(".comment_likes").on("click",function (){
+       let commentLikesNum = $(this).attr("value");
+       let commentText = $(".comment_likes_"+commentLikesNum).text();
+        $.ajax({
+            type: "POST",
+            url: "https://santa-community.co.kr/board/comment/like/" + commentLikesNum,
+            success: function (result) {
+                if (result == 2) { // 삽입일시
+                    $(".comment_likes_"+commentLikesNum).css("color","#17C99E");
+                    if(commentText == "좋아요") {
+                        $(".comment_likes_"+commentLikesNum).text("좋아요 1");
+                    }else{
+                        $(".comment_likes_"+commentLikesNum).text("좋아요 " + (parseInt(commentText.substring(4)) + 1).toString());
+                    }
+                } else { // 삭제일시
+                    $(".comment_likes_"+commentLikesNum).css("color","#999");
+                    if(commentText == "좋아요") console.log("좋아요 0에서 -처리시도");
+
+                    if(parseInt(commentText.substring(4)) == 1){
+                        $(".comment_likes_"+commentLikesNum).text("좋아요");
+                    }else{
+                        $(".comment_likes_"+commentLikesNum).text("좋아요 " + (parseInt(commentText.substring(4)) - 1).toString());
+                    }
+                }
+            },
+            error: function (err) {
+                console.log("댓글 좋아요 에러 = {}", err);
+            }
+        });
+    });
+
+
+    // 답글쓰기
+    $(".comment_reply").on("click",function (){
+        let replyName = $(this).attr("value");
+        let replyId = $(this).attr("id");
+
+        $("#reply_btn").fadeIn(100);
+        $("#reply_btn").addClass("on");
+        $("#reply_btn").text(replyName + " X");
+        let paddingCnt = $("#reply_btn").outerWidth() + 5;
+
+        // hidden
+        document.getElementById("reply").value = replyId;
+        $("#comment_input").css("padding-left", paddingCnt);
+        $("#comment_input").focus();
+
+    });
+
+    $("#reply_btn").on("click",function (){
+        // hidden
+        document.getElementById("reply").value = "";
+        $("#reply_btn").fadeOut(100);
+        $("#comment_input").css("padding-left", "5px");
+    });
+
+
+    // 글삭제
+    $("#setting_delete").on("click", function () {
+        $("#delete_alert").fadeIn(200);
+
+        $(".delete_board").click(function () {
+            $.ajax({
+                type: "DELETE",
+                url: "https://santa-community.co.kr/board/detail/" + boardNum + "/remove",
+                success: function (result) {
+                    if (result == 1) location.href = "https://santa-community.co.kr/board/list";
+                    if (result == -1) console.log("권한없는 사용자 접근, 로그 전송");
+                },
+                error: function (err) {
+                    console.log("게시글 삭제 에러 = {}", err);
+                }
+            });
+        });
+    });
+
+    // 글 수정
+    $("#setting_modify").on("click", function () {
+        $("#edit_board").submit();
+    });
+
+    // 댓글삭제
+    $(".delete_comment_btn").click(function () {
+        $("#delete_comment_alert").fadeIn(200);
+        let thisComment = $(this).attr("value");
+
+        $("#delete_comment").click(function(){
+            $.ajax({
+                type: "DELETE",
+                url: "https://santa-community.co.kr/board/comment/" + thisComment,
+                success: function (result) {
+                    if(result == 1) location.reload();
+                },
+                error: function (err) {
+                    console.log("게시글 댓글 삭제 에러 = {}", err);
+                }
+            });
+        });
+    });
+
+
+
+    // 좋아요
+    $(".like_btn").on("click", function () {
+        $.ajax({
+            type: "POST",
+            url: "https://santa-community.co.kr/board/like/" + boardNum,
+            success: function (result) {
+                if (result == 2) { // 삽입일시
+                    santaLikeAnimationStart("/json/likes.json", 0.9);
+                    $("#like_btn").attr("fill", "#17C99E");
+                    $("#like_btn").attr("stroke", "#17C99E");
+                    $("#likes_cnt").text(parseInt($("#likes_cnt").text()) + 1);
+                } else { // 삭제일시
+                    $("#like_btn").attr("fill", "white");
+                    $("#like_btn").attr("stroke", "black");
+                    $("#likes_cnt").text(parseInt($("#likes_cnt").text()) - 1);
+                }
+            },
+            error: function (err) {
+                console.log("좋아요 에러 = {}", err);
+            }
+        });
+    });
+</script>
+
+</html>
+

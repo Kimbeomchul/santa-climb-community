@@ -1,0 +1,129 @@
+<!doctype html>
+<html xmlns:th="http://www.thymleaf.org">
+<script type="text/javascript" src="/js/santaUtil.min.js"></script>
+<div th:replace="~{fragment/header :: linkHead}"></div>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<body style="background-color: white">
+<div class="wrap">
+    <section class="main chating">
+        <!-- header -->
+        <header class="header" th:fragment="header (text)">
+            <a href="">
+                <svg width="15" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                </svg>
+            </a>
+            <h2 style="font-weight: bold">채팅</h2>
+        </header>
+
+        <div class="chating_area">
+            <div class="m_search_empty">
+                <div class="empty_box">
+                    <img src="/img/nickname_circle.svg" alt="">
+                    <h3>현재 진행중인 채팅이없습니다.</h3>
+                    <p style="margin-bottom: 3px;">메인화면에서 채팅을 시작해보세요!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="chating_box chat_detail" th:each="memberRoom : ${rooms}" th:opponent="${memberRoom.opponent.socialId}" th:value="${memberRoom.chatRoom.roomId}" th:image ="${memberRoom.me.memberImage}" th:name="${memberRoom.me.socialId}">
+            <div class="on">
+                <img th:src="${memberRoom.opponent.memberImage}" style="width: 100%" src="/img/circle_img.png" alt="">
+            </div>
+            <div class="chating_txt">
+                <div class="c_titile">
+                    <h3 th:text="${memberRoom.opponent.nickname}" >제목</h3>
+                    <p class="last_modify_time">생성됨</p>
+                </div>
+                <div>
+                    <p class="last_message">대화를 시작해보세요.</p>
+                    <span style="display: none" class="not_read_cnt">1</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div th:replace="~{fragment/footer :: bottom_navigation_bar ('chat' )}"></div>
+</div>
+<script>
+    $(function(){
+        let lengthClass= $(".chat_detail").length;
+
+        if(lengthClass == 0){
+            $(".m_search_empty").show();
+        }else{
+            $(".m_search_empty").hide();
+        }
+
+        // 15초 새로고침
+        setInterval(function() {
+            location.reload();
+        }, 15000);
+
+        for (let i =0; i<lengthClass; i++ ){
+            let thisRoomId = $(".chat_detail:eq("+i+")").attr("value");
+            let counter = 0;
+            $.ajax({
+                type: "GET",
+                url: "https://santa-community.co.kr/chat/info/" + thisRoomId,
+                async: false,
+                success: function (result) {
+                    let chatData = JSON.parse(result.chatData);
+                    counter = chatData.length;
+                    let chatDataMessage = chatData[chatData.length-1].message;
+                    let chatDataTime = chatData[chatData.length-1].time;
+                    $(".last_message:eq("+i+")").text(chatDataMessage);
+                    $(".last_modify_time:eq("+i+")").text(moment(chatDataTime, "YYYY-MM-DD HH:mm:ss").locale('ko').fromNow());
+                },
+                error: function (err) {
+                    console.log("채팅데이터 불러오기 실패 = {}", err);
+                }
+            });
+
+            $.ajax({
+                type: "GET",
+                url: "https://santa-community.co.kr/chat/info/length/" + thisRoomId,
+                success: function (result) {
+                    if(counter != result){
+                        $(".not_read_cnt:eq("+i+")").text(counter - result);
+                        $(".not_read_cnt:eq("+i+")").show();
+                    }
+                },
+                error: function (err) {
+                    console.log("채팅길이데이터 불러오기 실패 = {}", err);
+                }
+            });
+        }
+
+        $(".chat_detail").on("click",function(){
+            let roomId = $(this).attr("value");
+            let sender = $(this).attr("name");
+            let senderImage = $(this).attr("image");
+            let opponentUser = $(this).attr("opponent");
+
+            localStorage.setItem('chat.senderImage',senderImage);
+            localStorage.setItem('chat.sender',sender);
+            localStorage.setItem('chat.roomId',roomId);
+            localStorage.setItem('chat.opponentSender',opponentUser);
+            location.href="/chat/room/enter/"+roomId;
+        });
+
+        $(".search_icon > svg").click(function(){
+            $(".search_icon > input").toggleClass('active');
+        });
+
+        $(".c_bottom_bottom > ul").find('li:eq(0)').click(function(){
+            var $this = $(this);
+            $this.find('>img').attr("src", function(index, attr){
+                if(attr.match('off')){
+                    return attr.replace("_off.png", "_active.png");
+                }else {
+                    return attr.replace("_active.png", "_off.png");
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
